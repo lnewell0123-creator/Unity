@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Button Link</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     FEATURE 4 — HOVER SIDEBAR
+     All control buttons live here. The sidebar is hidden off-screen except
+     for the thin blue "⟩ TOOLS" tab, which slides it out on hover.
+════════════════════════════════════════════════════════════════════════════ -->
+<nav id="sidebar" aria-label="Tools sidebar">
+  <div id="sidebar-inner">
+    <h3>🛠 Tools</h3>
+
+    <!-- Eruda DevTools loader -->
+    <a href="javascript:var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/eruda';s.onload=function(){eruda.init()};document.body.appendChild(s);"
+       style="text-decoration:none;">
+      <button class="sb-btn">🔧 Load Eruda</button>
+    </a>
+
+    <!-- Piano loader -->
+    <button class="sb-btn purple" id="piano-loader">🎹 Chromatic Piano</button>
+
+    <!-- Custom URL frame -->
+    <button class="sb-btn teal" id="versatile-loader-btn">🌐 URL Frame</button>
+
+    <!-- Flood history -->
+    <button class="sb-btn orange" onclick="floodHistory()">📚 Flood History</button>
+
+    <!-- Close-tab confirmation toggle -->
+    <button class="sb-btn" id="lockButton" onclick="togglePageLock()">🔒 Close Confirmation</button>
+
+    <!-- G0DM0D3 AI page link -->
+    <a href="godmode/index.html" style="text-decoration:none;">
+      <button class="sb-btn" style="background:linear-gradient(135deg,#003b00,#005500);border:1px solid #00ff41;color:#00ff41;text-shadow:0 0 8px #00ff41;font-weight:bold;letter-spacing:1px;">⛓️‍💥 G0DM0D3 AI</button>
+    </a>
+
+    <!-- Web Proxy link -->
+    <a href="proxy/index.html" style="text-decoration:none;">
+      <button class="sb-btn" style="background:linear-gradient(135deg,#0a0a2e,#1a1a4e);border:1px solid #6c63ff;color:#a29bfe;font-weight:bold;letter-spacing:1px;">🌀 Web Proxy</button>
+    </a>
+
+    <h3 style="margin-top:8px">🔔 Notifications</h3>
+    <!-- Feature 1 — Web Notifications -->
+    <button class="sb-btn blue" onclick="triggerNotifications()">Send Notifications</button>
+
+    <h3 style="margin-top:8px">🏷 Tab Disguise</h3>
+    <!-- Feature 2 — Tab customisation -->
+    <select id="tab-select" onchange="applyTabPreset(this.value)" aria-label="Choose tab preset">
+      <option value="">— pick a preset —</option>
+      <option value="0">🔵 Google Docs</option>
+      <option value="1">🟢 Google Classroom</option>
+      <option value="2">🔴 Google Slides</option>
+      <option value="3">🟡 Google Sheets</option>
+      <option value="4">⚫ Google Drive</option>
+    </select>
+
+  </div>
+  <div id="sidebar-handle" aria-hidden="true">⟩ TOOLS</div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="main-content">
+
+  <!-- ── AI INPUT (Feature 3: Enter key fixed in script.js) ───────────────── -->
+  <div class="ai-container">
+    <input type="text" id="ai-input" placeholder="Ask the AI something… (press Enter or click Ask)" />
+    <button id="ai-button">Ask AI</button>
+    <div id="ai-response" class="response-box"></div>
+  </div>
+
+
+  <!-- ── FEATURE 5: PANIC KEY SETTINGS ────────────────────────────────────── -->
+  <section id="panic-settings" aria-labelledby="panic-heading">
+    <h2 id="panic-heading">🚨 Panic Redirect Key</h2>
+    <label for="panic-key-input">Panic key (single character, e.g. <code>Escape</code> or <code>F1</code>)</label>
+    <input id="panic-key-input" type="text" maxlength="20" placeholder="e.g. Escape" autocomplete="off" />
+
+    <label for="panic-url-input">Redirect URL</label>
+    <input id="panic-url-input" type="url" placeholder="https://classroom.google.com" />
+
+    <button class="panic-save-btn" onclick="savePanicSettings()">💾 Save Panic Settings</button>
+
+    <p class="panic-current">
+      Current key: <strong id="panic-key-display">(none)</strong> →
+      <strong id="panic-url-display">https://classroom.google.com</strong>
+    </p>
+  </section>
+
+  <!-- ── COPY NOTIFICATION CODE ────────────────────────────────────────────── -->
+  <div style="max-width:480px;margin:20px auto;">
+    <button id="copyBtn">📋 Copy Notification Code</button>
+  </div>
+
+</div><!-- /#main-content -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     INLINE SCRIPTS (self-contained features that don't belong in script.js)
+════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- ── Piano loader (unchanged logic) ──────────────────────────────────────── -->
+<script>
+document.getElementById('piano-loader').addEventListener('click', function() {
+  (function() {
+    var piano = {
+      css: document.createElement("style"),
+      ui: document.createElement("div"),
+      keyboard: document.createElement("div"),
+      audio: new (window.AudioContext || window.webkitAudioContext)(),
+      keymap: [
+        {key:"`",  dom:document.createElement("div"),hz:220.00,pressed:0,is_black:false},
+        {key:"1",  dom:document.createElement("div"),hz:233.08,pressed:0,is_black:true},
+        {key:"q",  dom:document.createElement("div"),hz:246.94,pressed:0,is_black:false},
+        {key:"2",  dom:document.createElement("div"),hz:261.63,pressed:0,is_black:false},
+        {key:"w",  dom:document.createElement("div"),hz:277.18,pressed:0,is_black:true},
+        {key:"3",  dom:document.createElement("div"),hz:293.66,pressed:0,is_black:false},
+        {key:"e",  dom:document.createElement("div"),hz:311.13,pressed:0,is_black:true},
+        {key:"r",  dom:document.createElement("div"),hz:329.63,pressed:0,is_black:false},
+        {key:"5",  dom:document.createElement("div"),hz:349.23,pressed:0,is_black:false},
+        {key:"t",  dom:document.createElement("div"),hz:369.99,pressed:0,is_black:true},
+        {key:"6",  dom:document.createElement("div"),hz:392.00,pressed:0,is_black:false},
+        {key:"y",  dom:document.createElement("div"),hz:415.30,pressed:0,is_black:true},
+        {key:"u",  dom:document.createElement("div"),hz:440.00,pressed:0,is_black:false},
+        {key:"8",  dom:document.createElement("div"),hz:466.16,pressed:0,is_black:true},
+        {key:"i",  dom:document.createElement("div"),hz:493.88,pressed:0,is_black:false},
+        {key:"9",  dom:document.createElement("div"),hz:523.25,pressed:0,is_black:false},
+        {key:"o",  dom:document.createElement("div"),hz:554.37,pressed:0,is_black:true},
+        {key:"0",  dom:document.createElement("div"),hz:587.33,pressed:0,is_black:false},
+        {key:"p",  dom:document.createElement("div"),hz:622.25,pressed:0,is_black:true},
+        {key:"[",  dom:document.createElement("div"),hz:659.25,pressed:0,is_black:false},
+        {key:"=",  dom:document.createElement("div"),hz:698.46,pressed:0,is_black:false},
+        {key:"]",  dom:document.createElement("div"),hz:739.99,pressed:0,is_black:true},
+        {key:"\\", dom:document.createElement("div"),hz:783.99,pressed:0,is_black:false},
+        {key:"a",  dom:document.createElement("div"),hz:830.61,pressed:0,is_black:true},
+        {key:"z",  dom:document.createElement("div"),hz:880.00,pressed:0,is_black:false},
+        {key:"s",  dom:document.createElement("div"),hz:932.33,pressed:0,is_black:true},
+        {key:"x",  dom:document.createElement("div"),hz:987.77,pressed:0,is_black:false},
+        {key:"d",  dom:document.createElement("div"),hz:1046.50,pressed:0,is_black:false}
+      ],
+      disc: [[
+        {"keyi":12,"time":0.0},{"keyi":12,"time":0.15},{"keyi":12,"time":0.3},{"keyi":12,"time":0.45},
+        {"keyi":14,"time":0.75},{"keyi":14,"time":0.9},{"keyi":14,"time":1.05},{"keyi":14,"time":1.2},
+        {"keyi":15,"time":1.5},{"keyi":15,"time":1.65},{"keyi":15,"time":1.8},{"keyi":15,"time":1.95},
+        {"keyi":17,"time":2.25},{"keyi":17,"time":2.4},{"keyi":17,"time":2.55},{"keyi":17,"time":2.7},
+        {"keyi":19,"time":3.0},{"keyi":17,"time":3.2},{"keyi":15,"time":3.4},{"keyi":14,"time":3.6},
+        {"keyi":12,"time":3.9},{"keyi":7,"time":4.1},{"keyi":12,"time":4.3},{"keyi":14,"time":4.5},
+        {"keyi":15,"time":4.8},{"keyi":14,"time":5.0},{"keyi":12,"time":5.2},{"keyi":10,"time":5.4},
+        {"keyi":12,"time":5.7},{"keyi":12,"time":5.85},{"keyi":12,"time":6.0}
+      ]]
+    };
+
+    piano.css.innerHTML = `
+      #p-ui{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e272e;padding:15px;border-radius:12px;box-shadow:0 15px 35px rgba(0,0,0,.7);z-index:999999;font-family:sans-serif;width:600px;text-align:center}
+      #p-keys{display:flex;position:relative;background:#050709;padding:8px 4px;border-radius:6px;margin-top:10px;height:130px}
+      .pk{flex:1;height:110px;background:#fff;margin:1px;border-radius:0 0 4px 4px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;font-size:11px;font-weight:bold;color:#57606f;user-select:none;transition:background .05s}
+      .pk.black{background:#2f3542;color:#fff;height:70px;z-index:2}
+      .pk.pressed{background:#ff4757!important;color:#fff!important}
+      .p-banner{display:flex;justify-content:space-between;color:#fff;padding:0 5px;align-items:center}
+      .p-btn{background:#ffa502;border:none;color:#000;font-weight:bold;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px}
+    `;
+    document.head.appendChild(piano.css);
+
+    piano.ui.id = "p-ui";
+    piano.ui.innerHTML = `<div class="p-banner"><span>🎼 Chromatic Piano</span><button class="p-btn" id="p-play-trigger">▶ Play Astronomia</button></div>`;
+    piano.keyboard.id = "p-keys";
+
+    piano.keymap.forEach(function(item) {
+      item.dom.className = "pk" + (item.is_black ? " black" : "");
+      item.dom.innerText = item.key;
+      piano.keyboard.appendChild(item.dom);
+      item.dom.addEventListener('mousedown', function(){ startNote(item); });
+      item.dom.addEventListener('mouseup',   function(){ endNote(item); });
+      item.dom.addEventListener('mouseleave',function(){ endNote(item); });
+    });
+
+    piano.ui.appendChild(piano.keyboard);
+    document.body.appendChild(piano.ui);
+
+    function startNote(item) {
+      if (item.pressed) return;
+      if (piano.audio.state === 'suspended') piano.audio.resume();
+      item.pressed = true; item.dom.classList.add('pressed');
+      var osc = piano.audio.createOscillator(), gain = piano.audio.createGain();
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(item.hz, piano.audio.currentTime);
+      gain.gain.setValueAtTime(0.2, piano.audio.currentTime);
+      osc.connect(gain); gain.connect(piano.audio.destination); osc.start();
+      item.osc = osc; item.gain = gain;
+    }
+    function endNote(item) {
+      if (!item.pressed) return;
+      item.pressed = false; item.dom.classList.remove('pressed');
+      if (item.osc) { item.gain.gain.exponentialRampToValueAtTime(0.001, piano.audio.currentTime+0.08); item.osc.stop(piano.audio.currentTime+0.08); }
+    }
+
+    document.getElementById('p-play-trigger').addEventListener('click', function() {
+      piano.disc[0].forEach(function(note) {
+        setTimeout(function() {
+          var k = piano.keymap[note.keyi];
+          if (k) { startNote(k); setTimeout(function(){ endNote(k); }, 140); }
+        }, note.time * 1000);
+      });
+    });
+
+    window.addEventListener('keydown', function(e){ var m=piano.keymap.find(k=>k.key.toLowerCase()===e.key.toLowerCase()); if(m) startNote(m); });
+    window.addEventListener('keyup',   function(e){ var m=piano.keymap.find(k=>k.key.toLowerCase()===e.key.toLowerCase()); if(m) endNote(m); });
+  })();
+});
+</script>
+
+
+<!-- ── URL Frame loader ──────────────────────────────────────────────────── -->
+<script>
+document.getElementById('versatile-loader-btn').addEventListener('click', function() {
+  (function() {
+    var targetUrl = prompt("Enter the URL of the site you want to load:", "https://example.com");
+    if (!targetUrl) return;
+    if (!/^https?:\/\//i.test(targetUrl)) targetUrl = "https://" + targetUrl;
+
+    var iframe = document.createElement('iframe');
+    iframe.src = targetUrl;
+    Object.assign(iframe.style, {position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',border:'8px solid Aquamarine',width:'100%',height:'100%',zIndex:'9999'});
+
+    var btn = document.createElement('button');
+    btn.innerText = '✕';
+    Object.assign(btn.style, {position:'fixed',top:'15px',right:'15px',fontSize:'20px',color:'#333',backgroundColor:'Aquamarine',border:'none',borderRadius:'50%',width:'35px',height:'35px',cursor:'pointer',zIndex:'10000'});
+    btn.addEventListener('click', function(){ iframe.remove(); btn.remove(); });
+
+    document.body.appendChild(iframe);
+    document.body.appendChild(btn);
+  })();
+});
+</script>
+
+
+<!-- ── Flood history ─────────────────────────────────────────────────────── -->
+<script>
+function floodHistory() {
+  var targetUrl = prompt("Enter the URL you want to add to your history:\n(e.g., /page-name or https://example.com)");
+  if (!targetUrl) return;
+  var num = parseInt(prompt("How many times?"), 10);
+  if (isNaN(num) || num <= 0) { alert("Please enter a valid number greater than 0."); return; }
+  for (var i = 1; i <= num; i++) {
+    var u = targetUrl + (targetUrl.includes('?') ? '&' : '?') + 'h=' + i;
+    try { history.pushState(null, "", u); }
+    catch(e) { alert("Security Error: URL must share this page's domain."); return; }
+  }
+  alert("Flooding Successful!\n" + targetUrl + " added " + num + (num===1?" time.":" times."));
+}
+</script>
+
+
+<!-- ── Close-confirmation toggle (ON by default) ── -->
+<script>
+var _mainLockHandler = function(e){ e.preventDefault(); e.returnValue = ''; return ''; };
+window.addEventListener('beforeunload', _mainLockHandler);
+var _mainLocked = true;
+
+document.addEventListener('DOMContentLoaded', function () {
+  var btn = document.getElementById('lockButton');
+  if (!btn) return;
+  btn.innerText = '🔓 Disable Close Confirmation';
+  btn.style.background = '#e74c3c';
+  btn.onclick = function () {
+    _mainLocked = !_mainLocked;
+    if (_mainLocked) {
+      window.addEventListener('beforeunload', _mainLockHandler);
+      btn.innerText = '🔓 Disable Close Confirmation';
+      btn.style.background = '#e74c3c';
+    } else {
+      window.removeEventListener('beforeunload', _mainLockHandler);
+      btn.innerText = '🔒 Enable Close Confirmation';
+      btn.style.background = '';
+    }
+  };
+});
+</script>
+
+
+<!-- ── Copy notification code button ─────────────────────────────────────── -->
+<script>
+document.getElementById('copyBtn').addEventListener('click', function() {
+  var code = "Notification.requestPermission().then(p=>{if(p==='granted')new Notification('Success!',{body:'Your notifications are working perfectly.'})});";
+  navigator.clipboard.writeText(code)
+    .then(() => { var t=this.textContent; this.textContent="Copied!"; setTimeout(()=>this.textContent=t,2000); })
+    .catch(() => alert("Failed to copy code to clipboard."));
+});
+</script>
+
+
+<!-- ── Main script (AI + notifications + tab presets + panic key) ─────────── -->
+<script src="script.js"></script>
+
+</body>
+</html>

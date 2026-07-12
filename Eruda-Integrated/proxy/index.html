@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Proxy</title>
+  <style>
+    :root {
+      --bg:#0a0a1a; --surface:#12122a; --border:#2a2a5a;
+      --accent:#6c63ff; --accent2:#a29bfe; --text:#e0e0f0;
+      --text-dim:#888; --danger:#ff4757; --green:#00b894;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+    .proxy-header{padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;position:sticky;top:0;z-index:200;}
+    .proxy-logo{font-size:18px;font-weight:800;background:linear-gradient(135deg,#6c63ff,#a29bfe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px;white-space:nowrap;}
+    .proxy-bar{flex:1;display:flex;gap:8px;align-items:center;}
+    .proxy-input{flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s;}
+    .proxy-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(108,99,255,.2);}
+    .proxy-input::placeholder{color:var(--text-dim);}
+    .proxy-go{padding:10px 18px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .proxy-go:hover{background:#7c73ff;box-shadow:0 0 16px rgba(108,99,255,.5);}
+    .hdr-icon-btn{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:8px;padding:8px 11px;cursor:pointer;font-size:15px;transition:all .2s;flex-shrink:0;}
+    .hdr-icon-btn:hover{border-color:var(--accent);color:var(--accent2);}
+
+    /* server bar */
+    #server-bar{padding:6px 20px;background:rgba(108,99,255,.06);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;font-size:12px;flex-wrap:wrap;}
+    #server-bar label{color:var(--text-dim);white-space:nowrap;}
+    #server-indicator{width:8px;height:8px;border-radius:50%;background:#888;flex-shrink:0;transition:background .3s;}
+    #server-indicator.ok{background:var(--green);}
+    #server-indicator.err{background:var(--danger);}
+    #server-indicator.checking{background:#f9ca24;animation:pulse-dot 1s infinite;}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+    #server-name{color:var(--accent2);font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .srv-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:none;color:var(--text-dim);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+    .srv-btn:hover{border-color:var(--accent);color:var(--accent2);}
+
+    /* frame */
+    #frame-container{flex:1;display:none;position:relative;}
+    #frame-container.active{display:flex;}
+    #proxy-frame{width:100%;height:100%;border:none;flex:1;min-height:calc(100vh - 120px);}
+    #frame-close{position:absolute;top:10px;right:14px;z-index:300;background:var(--danger);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.5);transition:transform .15s;}
+    #frame-close:hover{transform:scale(1.15);}
+
+    /* home */
+    .proxy-home{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center;}
+    .proxy-hero-icon{font-size:60px;margin-bottom:16px;}
+    .proxy-title{font-size:28px;font-weight:800;background:linear-gradient(135deg,#6c63ff,#a29bfe,#fd79a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+    .proxy-sub{color:var(--text-dim);font-size:14px;max-width:480px;line-height:1.6;margin-bottom:28px;}
+    .quick-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;max-width:680px;width:100%;margin-bottom:28px;}
+    .quick-link{padding:12px 10px;background:var(--surface);border:1px solid var(--border);border-radius:11px;cursor:pointer;transition:all .2s;font-size:12px;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:7px;}
+    .quick-link .ql-icon{font-size:26px;}
+    .quick-link:hover{border-color:var(--accent);background:rgba(108,99,255,.1);transform:translateY(-2px);box-shadow:0 4px 16px rgba(108,99,255,.2);}
+
+    /* status bar */
+    #proxy-status{display:none;padding:5px 16px;background:rgba(108,99,255,.06);border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);align-items:center;gap:8px;flex-shrink:0;}
+    #proxy-status.show{display:flex;}
+    .status-url{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--accent2);}
+
+    /* loading */
+    #proxy-loading{display:none;position:absolute;inset:0;background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:10;}
+    #proxy-loading.show{display:flex;}
+    .spinner{width:40px;height:40px;border:3px solid rgba(108,99,255,.2);border-top-color:#6c63ff;border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* settings modal */
+    #settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;}
+    #settings-overlay.open{display:flex;}
+    #settings-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(560px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+    .sm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+    .sm-title{font-size:18px;font-weight:700;color:var(--text);}
+    .sm-close{background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;}
+    .sm-close:hover{color:var(--text);background:rgba(255,255,255,.06);}
+    .sm-section{margin-bottom:20px;}
+    .sm-section h4{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+    .server-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+    .server-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:1px solid var(--border);cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02);}
+    .server-row:hover{border-color:var(--accent);background:rgba(108,99,255,.08);}
+    .server-row.active-server{border-color:var(--green);background:rgba(0,184,148,.08);}
+    .srv-dot{width:9px;height:9px;border-radius:50%;background:#888;flex-shrink:0;}
+    .srv-dot.ok{background:var(--green);}
+    .srv-dot.err{background:var(--danger);}
+    .srv-dot.checking{background:#f9ca24;animation:pulse-dot 1s infinite;}
+    .srv-info{flex:1;min-width:0;}
+    .srv-info .srv-label{font-size:13px;font-weight:600;color:var(--text);}
+    .srv-info .srv-url{font-size:11px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .srv-actions{display:flex;gap:6px;flex-shrink:0;align-items:center;}
+    .sm-tag{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.5px;}
+    .sm-tag.builtin{background:rgba(108,99,255,.2);color:var(--accent2);}
+    .sm-tag.custom{background:rgba(0,184,148,.2);color:var(--green);}
+    .sm-tag.del{background:rgba(255,71,87,.15);color:var(--danger);cursor:pointer;border:none;}
+    .sm-tag.del:hover{background:rgba(255,71,87,.3);}
+    .select-btn,.check-btn{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text-dim);font-size:11px;cursor:pointer;transition:all .15s;}
+    .select-btn:hover,.server-row.active-server .select-btn{border-color:var(--green);color:var(--green);}
+    .check-btn:hover{border-color:#f9ca24;color:#f9ca24;}
+    .add-form{display:flex;flex-direction:column;gap:10px;}
+    .sm-input{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;}
+    .sm-input:focus{border-color:var(--accent);}
+    .sm-input::placeholder{color:var(--text-dim);}
+    .sm-input-row{display:flex;gap:8px;}
+    .sm-add-btn{padding:9px 16px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;}
+    .sm-add-btn:hover{background:#7c73ff;}
+    .sm-note{font-size:11px;color:var(--text-dim);line-height:1.6;padding:10px 12px;background:rgba(255,71,87,.06);border:1px solid rgba(255,71,87,.15);border-radius:8px;}
+    .sm-note a{color:var(--accent2);}
+    .cycle-info{font-size:12px;color:var(--text-dim);padding:8px 12px;background:rgba(108,99,255,.06);border-radius:8px;line-height:1.5;margin-bottom:10px;}
+  </style>
+</head>
+<body>
+
+  <!-- Shared sidebar (tab-close confirm ON by default, navigation links) -->
+  <script src="../sidebar.js"></script>
+
+  <header class="proxy-header">
+    <span class="proxy-logo">🌀 PROXY</span>
+    <div class="proxy-bar">
+      <input class="proxy-input" id="proxy-url-input" type="text"
+        placeholder="Enter URL or search… (e.g. google.com)"
+        autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="proxy-go" id="proxy-go-btn">Go</button>
+    </div>
+    <button class="hdr-icon-btn" id="settings-open-btn" title="Proxy Settings">⚙️</button>
+  </header>
+
+  <div id="server-bar">
+    <label>Server:</label>
+    <span id="server-indicator" class="checking"></span>
+    <span id="server-name">Checking…</span>
+    <button class="srv-btn" id="cycle-btn">🔄 Try Next</button>
+    <button class="srv-btn" id="check-cur-btn">⚡ Check</button>
+  </div>
+
+  <div id="proxy-status">
+    <span>🌐</span>
+    <span class="status-url" id="proxy-status-url"></span>
+    <button onclick="closeFrame()" style="background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:5px;padding:3px 9px;font-size:11px;cursor:pointer;">✕ Close</button>
+  </div>
+
+  <div class="proxy-home" id="proxy-home">
+    <div class="proxy-hero-icon">🌐</div>
+    <h1 class="proxy-title">Web Proxy</h1>
+    <p class="proxy-sub">Browse through Ultraviolet. If a server doesn't load, hit <strong>🔄 Try Next</strong> to cycle to the next one, or open <strong>⚙️ Settings</strong> to pick manually or add your own.</p>
+    <div class="quick-links">
+      <div class="quick-link" onclick="loadSite('https://www.google.com')"><span class="ql-icon">🔍</span>Google</div>
+      <div class="quick-link" onclick="loadSite('https://www.youtube.com')"><span class="ql-icon">▶️</span>YouTube</div>
+      <div class="quick-link" onclick="loadSite('https://www.reddit.com')"><span class="ql-icon">🟠</span>Reddit</div>
+      <div class="quick-link" onclick="loadSite('https://discord.com/app')"><span class="ql-icon">💬</span>Discord</div>
+      <div class="quick-link" onclick="loadSite('https://www.wikipedia.org')"><span class="ql-icon">📖</span>Wikipedia</div>
+      <div class="quick-link" onclick="loadSite('https://www.twitch.tv')"><span class="ql-icon">🟣</span>Twitch</div>
+      <div class="quick-link" onclick="loadSite('https://github.com')"><span class="ql-icon">🐙</span>GitHub</div>
+      <div class="quick-link" onclick="loadSite('https://twitter.com')"><span class="ql-icon">🐦</span>Twitter/X</div>
+    </div>
+  </div>
+
+  <div id="frame-container">
+    <div id="proxy-loading">
+      <div class="spinner"></div>
+      <span style="color:var(--text-dim);font-size:13px;" id="loading-label">Loading through proxy…</span>
+    </div>
+    <button id="frame-close" onclick="closeFrame()" title="Close proxy">✕</button>
+    <iframe id="proxy-frame"
+      sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts allow-top-navigation">
+    </iframe>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-overlay">
+    <div id="settings-modal">
+      <div class="sm-header">
+        <span class="sm-title">⚙️ Proxy Settings</span>
+        <button class="sm-close" id="settings-close-btn">✕</button>
+      </div>
+      <div class="sm-section">
+        <h4>🌐 Server Selection</h4>
+        <div class="cycle-info">
+          Click <strong>Select</strong> to use a server, <strong>⚡</strong> to ping it,
+          or hit <strong>🔄 Try Next</strong> in the toolbar to cycle automatically.
+          🟢 = reachable &nbsp;🔴 = blocked/down
+        </div>
+        <div class="server-list" id="server-list"></div>
+      </div>
+      <div class="sm-section">
+        <h4>➕ Add Custom Server</h4>
+        <div class="add-form">
+          <input class="sm-input" id="custom-label-input" type="text" placeholder="Name (e.g. My School Proxy)">
+          <div class="sm-input-row">
+            <input class="sm-input" id="custom-url-input" type="text" placeholder="Base URL  e.g. https://myproxy.vercel.app">
+            <button class="sm-add-btn" id="add-server-btn">Add</button>
+          </div>
+        </div>
+        <br>
+        <div class="sm-note">
+          Enter the <strong>root URL</strong> of any hosted
+          <a href="https://github.com/titaniumnetwork-dev/Ultraviolet-App" target="_blank">Ultraviolet-App</a>
+          instance. Free hosting: <a href="https://vercel.com" target="_blank">Vercel</a> ·
+          <a href="https://render.com" target="_blank">Render</a> ·
+          <a href="https://railway.app" target="_blank">Railway</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   BUILT-IN SERVERS
+   Multiple real Ultraviolet public deployments.
+   Encoding: base64 via btoa() appended to /service/
+   ══════════════════════════════════════════════════════ */
+var BUILTIN_SERVERS = [
+  {
+    label: 'Nebula Proxy',
+    base:  'https://nebulaproxy.io',
+    suffix:'/service/',
+    builtin: true
+  },
+  {
+    label: 'Holy Unblocker',
+    base:  'https://uv.holyubofficial.net',
+    suffix:'/service/',
+    builtin: true
+  },
+  {
+    label: 'Interstellar',
+    base:  'https://interstellar.fyi',
+    suffix:'/service/',
+    builtin: true
+  },
+  {
+    label: 'Incognito (Netlify)',
+    base:  'https://incognito.netlify.app',
+    suffix:'/service/',
+    builtin: true
+  },
+  {
+    label: 'Metallic (metallic.pages.dev)',
+    base:  'https://metallic.pages.dev',
+    suffix:'/service/',
+    builtin: true
+  },
+  {
+    label: 'Rammerhead (rh.gg)',
+    base:  'https://rh.gg',
+    suffix:'/service/',
+    builtin: true
+  },
+  {
+    label: 'Hypertabs',
+    base:  'https://hypertabs.cc',
+    suffix:'/service/',
+    builtin: true
+  },
+  {
+    label: 'Shadow Proxy (shadowproxy.cf)',
+    base:  'https://shadowproxy.cf',
+    suffix:'/service/',
+    builtin: true
+  }
+];
+
+/* ── Storage ── */
+var STORAGE_KEY = 'proxy_custom_servers';
+var ACTIVE_KEY  = 'proxy_active_server_idx';
+
+function loadCustom(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }catch(e){ return []; } }
+function saveCustom(a){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(a)); }catch(e){} }
+function getActiveIdx(){ try{ return parseInt(localStorage.getItem(ACTIVE_KEY)||'0',10)||0; }catch(e){ return 0; } }
+function setActiveIdx(i){ try{ localStorage.setItem(ACTIVE_KEY, String(i)); }catch(e){} }
+function getAllServers(){ return BUILTIN_SERVERS.concat(loadCustom()); }
+
+var activeIdx = getActiveIdx();
+var pingCache = {};
+
+function clamp(i){ var a=getAllServers(); if(i<0)return a.length-1; if(i>=a.length)return 0; return i; }
+function getActive(){ activeIdx=clamp(activeIdx); return getAllServers()[activeIdx]; }
+
+function encodeURL(target){
+  var srv=getActive();
+  try{ return srv.base+srv.suffix+btoa(target); }
+  catch(e){ return srv.base+srv.suffix+encodeURIComponent(target); }
+}
+
+function normalizeURL(raw){
+  raw=raw.trim(); if(!raw) return null;
+  if(!raw.includes('.')||raw.includes(' '))
+    return 'https://www.google.com/search?q='+encodeURIComponent(raw);
+  if(!/^https?:\/\//i.test(raw)) raw='https://'+raw;
+  return raw;
+}
+
+/* ── Server bar ── */
+function updateServerBar(){
+  document.getElementById('server-name').textContent = getActive().label;
+  var ind = document.getElementById('server-indicator');
+  ind.className = pingCache[activeIdx] || 'checking';
+}
+
+function pingServer(idx, cb){
+  var all=getAllServers();
+  if(idx>=all.length){ cb('err'); return; }
+  var srv=all[idx];
+  var done=false;
+  function finish(r){ if(done)return; done=true; clearTimeout(t); cb(r); }
+  var t=setTimeout(function(){ finish('err'); }, 5000);
+  var xhr=new XMLHttpRequest();
+  xhr.open('HEAD', srv.base+'/favicon.ico', true);
+  xhr.timeout=4500;
+  xhr.onload=function(){ finish('ok'); };
+  xhr.onerror=function(){ finish('err'); };
+  xhr.ontimeout=function(){ finish('err'); };
+  try{ xhr.send(); }catch(e){ finish('err'); }
+}
+
+function checkCurrent(){
+  var ind=document.getElementById('server-indicator');
+  ind.className='checking';
+  pingCache[activeIdx]='checking';
+  pingServer(activeIdx, function(r){
+    pingCache[activeIdx]=r;
+    ind.className=r;
+    renderServerList();
+  });
+}
+
+function cycleNext(){
+  activeIdx=clamp(activeIdx+1);
+  setActiveIdx(activeIdx);
+  updateServerBar();
+  checkCurrent();
+  renderServerList();
+}
+
+/* ── Load / close frame ── */
+function loadSite(url){
+  var norm=normalizeURL(url); if(!norm) return;
+  document.getElementById('proxy-url-input').value=url;
+  document.getElementById('proxy-home').style.display='none';
+  document.getElementById('frame-container').classList.add('active');
+  var loading=document.getElementById('proxy-loading');
+  loading.classList.add('show');
+  document.getElementById('loading-label').textContent='Loading via '+getActive().label+'…';
+  document.getElementById('proxy-status').classList.add('show');
+  document.getElementById('proxy-status-url').textContent=norm;
+  var frame=document.getElementById('proxy-frame');
+  frame.src=encodeURL(norm);
+  frame.onload=function(){ loading.classList.remove('show'); };
+  setTimeout(function(){ loading.classList.remove('show'); }, 10000);
+}
+
+function closeFrame(){
+  document.getElementById('frame-container').classList.remove('active');
+  document.getElementById('proxy-home').style.display='';
+  document.getElementById('proxy-status').classList.remove('show');
+  document.getElementById('proxy-frame').src='about:blank';
+}
+
+/* ── Input handlers ── */
+function handleGo(){ var url=normalizeURL(document.getElementById('proxy-url-input').value); if(url) loadSite(url); }
+document.getElementById('proxy-go-btn').addEventListener('click', handleGo);
+document.getElementById('proxy-url-input').addEventListener('keydown', function(e){ if(e.key==='Enter') handleGo(); });
+document.getElementById('cycle-btn').addEventListener('click', cycleNext);
+document.getElementById('check-cur-btn').addEventListener('click', checkCurrent);
+
+/* ── Settings modal ── */
+function openSettings(){ renderServerList(); document.getElementById('settings-overlay').classList.add('open'); }
+function closeSettings(){ document.getElementById('settings-overlay').classList.remove('open'); }
+document.getElementById('settings-open-btn').addEventListener('click', openSettings);
+document.getElementById('settings-close-btn').addEventListener('click', closeSettings);
+document.getElementById('settings-overlay').addEventListener('click', function(e){ if(e.target===this) closeSettings(); });
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderServerList(){
+  var all=getAllServers();
+  var custom=loadCustom();
+  var list=document.getElementById('server-list');
+  list.innerHTML='';
+  all.forEach(function(srv,i){
+    var row=document.createElement('div');
+    row.className='server-row'+(i===activeIdx?' active-server':'');
+    var dot=pingCache[i]||'checking';
+    var isCustom=!srv.builtin;
+    var ci=i-BUILTIN_SERVERS.length;
+    row.innerHTML=
+      '<span class="srv-dot '+dot+'"></span>'+
+      '<div class="srv-info"><div class="srv-label">'+escHtml(srv.label)+'</div>'+
+      '<div class="srv-url">'+escHtml(srv.base)+'</div></div>'+
+      '<div class="srv-actions">'+
+        '<span class="sm-tag '+(isCustom?'custom':'builtin')+'">'+(isCustom?'custom':'built-in')+'</span>'+
+        (isCustom?'<button class="sm-tag del" data-del="'+ci+'">🗑</button>':'')+
+        '<button class="check-btn" data-check="'+i+'">⚡</button>'+
+        '<button class="select-btn" data-sel="'+i+'">'+(i===activeIdx?'✓ Active':'Select')+'</button>'+
+      '</div>';
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('[data-sel]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      activeIdx=parseInt(this.dataset.sel,10);
+      setActiveIdx(activeIdx);
+      updateServerBar(); checkCurrent(); renderServerList();
+    });
+  });
+  list.querySelectorAll('[data-check]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var idx=parseInt(this.dataset.check,10);
+      var dot=list.querySelectorAll('.server-row')[idx].querySelector('.srv-dot');
+      dot.className='srv-dot checking'; pingCache[idx]='checking';
+      pingServer(idx, function(r){ pingCache[idx]=r; dot.className='srv-dot '+r; });
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var ci=parseInt(this.dataset.del,10);
+      var c=loadCustom(); c.splice(ci,1); saveCustom(c);
+      var newTotal=BUILTIN_SERVERS.length+c.length;
+      if(activeIdx>=newTotal){ activeIdx=0; setActiveIdx(0); }
+      delete pingCache[BUILTIN_SERVERS.length+ci];
+      updateServerBar(); renderServerList();
+    });
+  });
+}
+
+document.getElementById('add-server-btn').addEventListener('click', function(){
+  var label=document.getElementById('custom-label-input').value.trim();
+  var base=document.getElementById('custom-url-input').value.trim();
+  if(!base){ alert('Please enter a URL.'); return; }
+  if(!/^https?:\/\//i.test(base)) base='https://'+base;
+  base=base.replace(/\/+$/,'');
+  if(!label) label=base;
+  var c=loadCustom(); c.push({label:label,base:base,suffix:'/service/',builtin:false}); saveCustom(c);
+  document.getElementById('custom-label-input').value='';
+  document.getElementById('custom-url-input').value='';
+  renderServerList();
+});
+
+/* ── Init ── */
+updateServerBar();
+checkCurrent();
+</script>
+</body>
+</html>
