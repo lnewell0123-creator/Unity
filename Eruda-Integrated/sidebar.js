@@ -4,8 +4,24 @@
    – Persists across main, godmode, proxy pages
    ═══════════════════════════════════════════════════════════════ */
 (function () {
-  const depth = (window.location.pathname.match(/\//g) || []).length;
-  const root  = depth >= 2 ? '../' : '';
+  // Compute the relative href prefix that climbs out of the current
+  // directory back to the project root. We strip any trailing
+  // '/index.html' and trailing slashes, then count the remaining
+  // path segments.
+  //   /Eruda-Integrated/index.html        -> 1 segment -> root = ''
+  //   /Eruda-Integrated/games/index.html  -> 2 segments -> root = '../'
+  //   /Eruda-Integrated/games/             -> 2 segments -> root = '../'
+  //   /Eruda-Integrated/                   -> 1 segment  -> root = ''
+  //   /                                    -> 0 segments -> root = ''
+  const _normalized = window.location.pathname.replace(/\/index\.html$/, '').replace(/\/+$/, '/');
+  const _segments   = _normalized.split('/').filter(Boolean);
+  // Scale with depth so links keep resolving back to project root no
+  // matter how the site is hosted:
+  //   /                       -> _segments=[]    -> root = ''
+  //   /index.html             -> _segments=[]    -> root = ''
+  //   /games/index.html       -> _segments=[games] -> root = '../'
+  //   /a/b/games/index.html   -> _segments=[a,b,games] -> root = '../../'
+  const root = _segments.length === 0 ? '' : '../'.repeat(_segments.length);
 
   /* ══ TAB-CLOSE CONFIRMATION — ON immediately, before anything else ══ */
   var _lockHandler = function(e){ e.preventDefault(); e.returnValue = ''; return ''; };

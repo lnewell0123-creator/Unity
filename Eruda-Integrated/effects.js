@@ -78,7 +78,7 @@
       transform: scale(1.04);
       transition: opacity 380ms cubic-bezier(0.2, 0.8, 0.2, 1),
                   transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1);
-      pointer-events: auto;
+      pointer-events: none;        /* clicks fall through to elements below */
       overflow: hidden;
     }
     #unity-splash.shown {
@@ -111,6 +111,8 @@
       align-items: center;
       gap: 0;
       animation: us-rise 600ms cubic-bezier(0.2, 0.8, 0.2, 1) 80ms both;
+      pointer-events: auto;        /* only the inner card catches clicks */
+      cursor: pointer;
     }
     @keyframes us-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
