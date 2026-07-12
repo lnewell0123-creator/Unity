@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude CLI</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M9.34 22.34l4.66-12.66 4.66 12.66M11.6 19.2h4.8' fill='none' stroke='%23D97757' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='25' cy='9' r='3' fill='%23D97757'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Claude warm copper theme */
+      --bg: #14110f;
+      --bg-soft: #1c1815;
+      --surface: #221c18;
+      --surface-hover: #2c241f;
+      --border: #332821;
+      --border-strong: #4a3b30;
+      --copper: #D97757;
+      --copper-bright: #E89170;
+      --copper-dark: #B45A3F;
+      --copper-deep: #8E432C;
+      --ember: #F4A878;
+      --cream: #F4E9DC;
+      --text: #F2EBE3;
+      --text-mid: #C8BAB0;
+      --text-dim: #8B7E74;
+      --text-faint: #5e544c;
+      --danger: #E55D5D;
+      --success: #6BBF7A;
+      --warn: #E8B057;
+      --shadow: rgba(0,0,0,0.5);
+      --glow-copper: rgba(217, 119, 87, 0.25);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: -webkit-fill-available; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
+    }
+
+    /* Subtle warm gradient backdrop */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse at top right, rgba(217,119,87,0.08), transparent 60%),
+        radial-gradient(ellipse at bottom left, rgba(180,90,63,0.05), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* ─── Header ────────────────────────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(28,24,21,0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .brand-logo {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--copper), var(--copper-deep));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 18px var(--glow-copper);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .brand-logo:hover { transform: scale(1.05); box-shadow: 0 0 26px var(--glow-copper); }
+
+    .brand-logo svg { width: 22px; height: 22px; }
+
+    .brand-text {
+      display: flex; flex-direction: column;
+    }
+    .brand-name {
+      font-size: 16px; font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.2px;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: var(--copper);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .topbar-actions {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .model-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 12px 7px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-mid);
+      transition: all .2s;
+      cursor: default;
+    }
+    .model-pill .dot {
+      width: 6px; height: 6px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--success);
+    }
+    .model-pill .dot.no-key { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+    .model-pill:hover { border-color: var(--copper); }
+
+    .icon-btn {
+      width: 38px; height: 38px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-mid);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      transition: all .15s;
+    }
+    .icon-btn:hover { border-color: var(--copper); color: var(--copper-bright); transform: translateY(-1px); }
+    .icon-btn:active { transform: translateY(0) scale(0.97); }
+
+    /* ─── Chat area ─────────────────────────────────────────────── */
+    .chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 24px 12px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    .messages::-webkit-scrollbar { width: 8px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .messages::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+    .msg {
+      max-width: 760px;
+      margin: 0 auto 22px;
+      display: flex;
+      gap: 14px;
+      animation: msgIn .25s ease-out;
+    }
+    @keyframes msgIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+
+    .msg.user { flex-direction: row-reverse; }
+
+    .msg-avatar {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 13px; font-weight: 700;
+    }
+    .msg.assistant .msg-avatar {
+      background: linear-gradient(135deg, var(--copper), var(--copper-deep));
+      box-shadow: 0 0 12px var(--glow-copper);
+      color: #fff;
+    }
+    .msg.user .msg-avatar {
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      color: var(--text-mid);
+    }
+
+    .msg-bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 17px;
+      font-size: 14.5px;
+      line-height: 1.65;
+      color: var(--text);
+      flex: 1;
+      min-width: 0;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .msg.user .msg-bubble {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+    }
+    .msg.error .msg-bubble {
+      background: rgba(229,93,93,0.08);
+      border-color: rgba(229,93,93,0.4);
+      color: #ffd5d5;
+    }
+    .msg.error .msg-bubble .err-actions { margin-top: 10px; }
+    .msg.error .msg-bubble .err-link {
+      color: var(--copper-bright);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .msg-bubble p { margin: 0 0 10px 0; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+    .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 { margin: 14px 0 8px; font-weight: 600; color: var(--cream); }
+    .msg-bubble h1:first-child, .msg-bubble h2:first-child, .msg-bubble h3:first-child { margin-top: 0; }
+    .msg-bubble h1 { font-size: 18px; }
+    .msg-bubble h2 { font-size: 16px; }
+    .msg-bubble h3 { font-size: 14.5px; }
+    .msg-bubble ul, .msg-bubble ol { padding-left: 22px; margin: 0 0 10px 0; }
+    .msg-bubble li { margin-bottom: 4px; }
+    .msg-bubble code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: rgba(0,0,0,0.4);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--ember);
+    }
+    .msg-bubble pre {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin: 8px 0;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+    .msg-bubble pre code { background: none; padding: 0; color: var(--text); }
+    .msg-bubble blockquote {
+      border-left: 3px solid var(--copper);
+      padding-left: 12px;
+      color: var(--text-mid);
+      font-style: italic;
+      margin: 8px 0;
+    }
+    .msg-bubble strong { color: var(--cream); font-weight: 600; }
+    .msg-bubble a { color: var(--copper-bright); text-decoration: underline; }
+    .msg-bubble table { border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+    .msg-bubble th, .msg-bubble td { border: 1px solid var(--border); padding: 6px 10px; }
+    .msg-bubble th { background: rgba(0,0,0,0.3); }
+
+    .typing-cursor {
+      display: inline-block;
+      width: 7px; height: 16px;
+      background: var(--copper-bright);
+      vertical-align: -3px;
+      margin-left: 2px;
+      animation: blink 1s steps(1) infinite;
+      border-radius: 1px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .msg-meta {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+    .msg.user .msg-meta { justify-content: flex-end; }
+    .msg-meta .stat { display: inline-flex; align-items: center; gap: 4px; }
+    .msg-meta button {
+      background: none; border: none;
+      color: var(--text-faint);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: all .15s;
+    }
+    .msg-meta button:hover { color: var(--copper-bright); background: rgba(217,119,87,0.1); }
+    .msg-meta button.copied { color: var(--success); }
+
+    /* ─── Welcome ───────────────────────────────────────────────── */
+    .welcome {
+      position: absolute;
+      inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px;
+      text-align: center;
+      pointer-events: none;
+    }
+    .welcome.show { pointer-events: auto; }
+
+    .welcome-sparkle {
+      width: 64px; height: 64px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--copper), var(--copper-deep));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 30px var(--glow-copper), 0 8px 30px rgba(0,0,0,0.4);
+      margin-bottom: 22px;
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .welcome-sparkle svg { width: 38px; height: 38px; }
+
+    .welcome h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--text) 0%, var(--copper-bright) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .welcome-sub {
+      color: var(--text-mid);
+      font-size: 15px;
+      max-width: 460px;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+    .welcome-sub b { color: var(--copper-bright); }
+
+    .suggestions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(240px, 1fr));
+      gap: 12px;
+      max-width: 560px;
+      width: 100%;
+    }
+    .suggestion {
+      pointer-events: auto;
+      text-align: left;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 13.5px;
+      cursor: pointer;
+      transition: all .2s;
+      line-height: 1.4;
+    }
+    .suggestion:hover {
+      border-color: var(--copper);
+      background: var(--surface-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(217,119,87,0.15);
+    }
+    .suggestion .sug-icon {
+      color: var(--copper);
+      font-size: 16px;
+      margin-right: 8px;
+    }
+
+    /* ─── Input area ────────────────────────────────────────────── */
+    .composer {
+      flex-shrink: 0;
+      padding: 14px 24px 22px;
+      background: rgba(20,17,15,0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+    }
+
+    .composer-inner {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .composer-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 12px 14px;
+      transition: border-color .15s, box-shadow .15s;
+      position: relative;
+    }
+    .composer-box:focus-within {
+      border-color: var(--copper);
+      box-shadow: 0 0 0 3px var(--glow-copper);
+    }
+
+    .composer-row {
+      display: flex; align-items: flex-end; gap: 10px;
+    }
+
+    .composer textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.5;
+      resize: none;
+      min-height: 24px;
+      max-height: 200px;
+      padding: 6px 4px;
+    }
+    .composer textarea::placeholder { color: var(--text-dim); }
+
+    .send-btn {
+      width: 38px; height: 38px;
+      border-radius: 11px;
+      border: none;
+      background: linear-gradient(135deg, var(--copper), var(--copper-dark));
+      color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all .15s;
+      box-shadow: 0 2px 10px var(--glow-copper);
+    }
+    .send-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px var(--glow-copper);
+    }
+    .send-btn:active:not(:disabled) { transform: translateY(0) scale(0.96); }
+    .send-btn:disabled {
+      background: var(--border);
+      color: var(--text-faint);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    .send-btn.stop { background: var(--danger); }
+    .send-btn svg { width: 18px; height: 18px; }
+
+    .composer-hint {
+      display: flex; justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-faint);
+      padding: 0 4px;
+    }
+    .composer-hint .hint-kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+    .composer-hint .no-key-warning {
+      color: var(--warn);
+    }
+    .composer-hint .no-key-warning a {
+      color: var(--copper-bright);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* ─── Settings Modal ────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Match the shared sidebar's max z-index and rely on DOM order to
+         sit above it. Without this the eruda-sidebar floats above the modal. */
+      z-index: 2147483647;
+      opacity: 0; visibility: hidden;
+      transition: all .2s;
+      padding: 20px;
+    }
+    .modal-overlay.open { opacity: 1; visibility: visible; }
+
+    .modal {
+      background: var(--bg-soft);
+      border: 1px solid var(--border-strong);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 88vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(217,119,87,0.08);
+      transform: scale(0.96);
+      transition: transform .2s;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+
+    .modal-head {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-shrink: 0;
+    }
+    .modal-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 16px; font-weight: 700;
+    }
+    .modal-title-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: linear-gradient(135deg, var(--copper), var(--copper-deep));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .modal-close {
+      background: none; border: none;
+      color: var(--text-dim);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all .15s;
+    }
+    .modal-close:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+    .settings-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0;
+      padding: 0 14px;
+    }
+    .settings-tab {
+      padding: 12px 14px;
+      background: none; border: none;
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .settings-tab:hover { color: var(--text-mid); }
+    .settings-tab.active {
+      color: var(--copper-bright);
+      border-bottom-color: var(--copper);
+    }
+
+    .modal-body {
+      padding: 22px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-body::-webkit-scrollbar { width: 8px; }
+    .modal-body::-webkit-scrollbar-track { background: transparent; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .settings-panel { display: none; }
+    .settings-panel.active { display: block; }
+
+    .field {
+      margin-bottom: 18px;
+    }
+    .field:last-child { margin-bottom: 0; }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-mid);
+      margin-bottom: 7px;
+      letter-spacing: 0.2px;
+    }
+    .field-hint {
+      display: block;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
+    .input, .select, .textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: all .15s;
+    }
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: var(--copper);
+      box-shadow: 0 0 0 3px var(--glow-copper);
+    }
+    .input::placeholder, .textarea::placeholder { color: var(--text-faint); }
+
+    .textarea {
+      resize: vertical;
+      min-height: 70px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .api-key-row {
+      display: flex; gap: 8px;
+    }
+    .api-key-row .input {
+      flex: 1;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+    .input-action {
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text-mid);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .input-action:hover { border-color: var(--copper); color: var(--copper-bright); }
+    .input-action.danger {
+      border-color: rgba(229,93,93,0.3);
+      color: var(--danger);
+    }
+    .input-action.danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+    .key-status {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px;
+      padding: 10px 12px;
+      border-radius: 9px;
+      margin-top: 8px;
+    }
+    .key-status.ok { background: rgba(107,191,122,0.08); color: var(--success); }
+    .key-status.empty { background: rgba(232,176,87,0.08); color: var(--warn); }
+
+    .slider-wrap {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .slider-wrap .input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      padding: 0;
+      background: transparent;
+      border: none;
+      height: 24px;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      background: linear-gradient(135deg, var(--copper), var(--copper-dark));
+      border-radius: 50%;
+      margin-top: -6px;
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--glow-copper);
+    }
+    input[type="range"]::-moz-range-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px; height: 16px;
+      background: linear-gradient(135deg, var(--copper), var(--copper-dark));
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--glow-copper);
+    }
+    .slider-value {
+      width: 50px;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--copper-bright);
+      padding: 6px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+    }
+
+    .checkbox-row {
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      padding: 8px 0;
+    }
+    .checkbox-row input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px; height: 20px;
+      border: 2px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--bg);
+      cursor: pointer;
+      position: relative;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .checkbox-row input[type="checkbox"]:checked {
+      background: var(--copper);
+      border-color: var(--copper);
+    }
+    .checkbox-row input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .checkbox-row label {
+      cursor: pointer;
+      flex: 1;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+    .modal-footer-left { font-size: 11.5px; color: var(--text-dim); }
+    .modal-footer-left a { color: var(--copper-bright); text-decoration: none; }
+    .modal-footer-left a:hover { text-decoration: underline; }
+
+    .btn-primary {
+      padding: 10px 22px;
+      background: linear-gradient(135deg, var(--copper), var(--copper-dark));
+      border: none;
+      border-radius: 9px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+      box-shadow: 0 2px 10px var(--glow-copper);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px var(--glow-copper); }
+    .btn-primary:active { transform: translateY(0) scale(0.97); }
+
+    /* ─── Loading / status row ──────────────────────────────────── */
+    .status-strip {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 6px 0;
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex; align-items: center; gap: 8px;
+      min-height: 22px;
+    }
+    .status-strip .spinner {
+      width: 12px; height: 12px;
+      border: 2px solid rgba(217,119,87,0.2);
+      border-top-color: var(--copper);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Mobile ───────────────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .topbar { padding: 12px 14px; }
+      .brand-sub { display: none; }
+      .model-pill { padding: 6px 10px; font-size: 11px; }
+      .messages { padding: 18px 14px 8px; }
+      .composer { padding: 10px 14px 16px; }
+      .welcome h1 { font-size: 22px; }
+      .welcome-sub { font-size: 14px; }
+      .suggestions {
+        grid-template-columns: 1fr;
+        max-width: 360px;
+      }
+      .msg-bubble { font-size: 14px; padding: 12px 14px; }
+      .modal { max-height: 92dvh; }
+      .api-key-row { flex-direction: column; }
+      .api-key-row .input-action { width: 100%; }
+    }
+
+    @supports (-webkit-touch-callout: none) {
+      .messages, .modal-body { -webkit-overflow-scrolling: touch; }
+      .composer textarea { font-size: 16px; }
+      .input, .select { font-size: 16px; }
+    }
+
+    /* ─── Mobile safe areas ────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .composer {
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+      }
+      .topbar {
+        padding-top: max(12px, env(safe-area-inset-top));
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Persistent shared sidebar from /sidebar.js -->
+  <script src="../sidebar.js"></script>
+
+  <div class="app">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <!-- Anthropic-style sparkle -->
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9.5 22.5L14 10L18.5 22.5M11.6 19.2H16.4" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24.5" cy="9.5" r="3" fill="#fff"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">Claude CLI</div>
+          <div class="brand-sub">Anthropic API · Browser Direct</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="model-pill" id="modelPill" title="Active model">
+          <span class="dot" id="modelDot"></span>
+          <span id="modelName">— no key —</span>
+        </div>
+        <button class="icon-btn" id="clearBtn" title="New conversation">+</button>
+        <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
+      </div>
+    </header>
+
+    <!-- Chat -->
+    <main class="chat">
+      <div class="messages" id="messages"></div>
+
+      <div class="welcome show" id="welcome">
+        <div class="welcome-sparkle" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9.5 22.5L14 10L18.5 22.5M11.6 19.2H16.4" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24.5" cy="9.5" r="3.5" fill="#fff"/>
+          </svg>
+        </div>
+        <h1>Claude CLI</h1>
+        <p class="welcome-sub">A focused, terminal-style chat with the Claude API, <b>direct from your browser</b>. Add your API key in ⚙ Settings, pick a model, and start talking.</p>
+        <div class="suggestions">
+          <button class="suggestion" data-prompt="Explain how transformer attention works as if I were 12."><span class="sug-icon">✦</span>Explain how transformer attention works as if I were 12.</button>
+          <button class="suggestion" data-prompt="Write a Python function that flattens a nested list of arbitrary depth."><span class="sug-icon">✦</span>Write a Python function that flattens a nested list.</button>
+          <button class="suggestion" data-prompt="Give me 5 creative birthday gift ideas under $30 for a friend who loves plants."><span class="sug-icon">✦</span>5 creative birthday gift ideas under $30 for a plant lover.</button>
+          <button class="suggestion" data-prompt="Compare SQLite and PostgreSQL for a small side project. When would you pick each?"><span class="sug-icon">✦</span>SQLite vs PostgreSQL — when to pick each one?</button>
+        </div>
+      </div>
+
+      <!-- Composer -->
+      <div class="composer">
+        <div class="composer-inner">
+          <div class="composer-box">
+            <div class="composer-row">
+              <textarea
+                id="composerInput"
+                placeholder="Ask Claude anything…"
+                rows="1"
+              ></textarea>
+              <button class="send-btn" id="sendBtn" title="Send (Enter)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="composer-hint">
+            <div>
+              <span class="hint-kbd">↵</span> send &nbsp;·&nbsp;
+              <span class="hint-kbd">⇧↵</span> new line
+            </div>
+            <div id="composerStatus"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsOverlay">
+    <div class="modal" id="settingsModal">
+      <div class="modal-head">
+        <div class="modal-title">
+          <div class="modal-title-icon">⚙</div>
+          <span>Settings</span>
+        </div>
+        <button class="modal-close" id="settingsClose" title="Close">×</button>
+      </div>
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="api">API</button>
+        <button class="settings-tab" data-tab="model">Model</button>
+        <button class="settings-tab" data-tab="params">Parameters</button>
+        <button class="settings-tab" data-tab="system">System</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- API key tab -->
+        <div class="settings-panel active" data-panel="api">
+          <div class="field">
+            <label class="field-label" for="apiKeyInput">Anthropic API Key</label>
+            <div class="api-key-row">
+              <input class="input" type="password" id="apiKeyInput" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
+              <button class="input-action" id="apiKeyToggle" type="button" title="Show / hide key">show</button>
+              <button class="input-action danger" id="apiKeyClear" type="button" title="Delete key">clear</button>
+            </div>
+            <div class="key-status" id="keyStatus">No key set. Add one to start chatting.</div>
+            <div class="field-hint">
+              Your key is stored locally in <b>localStorage</b> and is sent only to
+              <code>api.anthropic.com</code>. Get one from
+              <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="color:var(--copper-bright)">console.anthropic.com/settings/keys</a>.
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="checkbox-row">
+              <input type="checkbox" id="streamEnabled" checked>
+              <label for="streamEnabled">Stream responses token-by-token</label>
+            </div>
+            <div class="field-hint">Recommended. Tokens appear as they're generated instead of waiting for the full response.</div>
+          </div>
+
+          <div class="field">
+            <div class="checkbox-row">
+              <input type="checkbox" id="markdownEnabled" checked>
+              <label for="markdownEnabled">Render Markdown (code blocks, lists, etc.)</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Model tab -->
+        <div class="settings-panel" data-panel="model">
+          <div class="field">
+            <label class="field-label" for="modelSelect">Model</label>
+            <select class="select" id="modelSelect">
+              <optgroup label="Claude 3.5 (latest)">
+                <option value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet (latest) — balanced, fast</option>
+                <option value="claude-3-5-haiku-latest">Claude 3.5 Haiku (latest) — fastest, cheap</option>
+              </optgroup>
+              <optgroup label="Claude 3 (stable)">
+                <option value="claude-3-opus-latest">Claude 3 Opus (latest) — most capable</option>
+                <option value="claude-3-haiku-20240307">Claude 3 Haiku — pinned</option>
+              </optgroup>
+              <optgroup label="Custom">
+                <option value="__custom__">Custom model ID…</option>
+              </optgroup>
+            </select>
+            <div class="field-hint" id="modelHint">Sonnet is great for most tasks. Haiku for speed/cost. Opus for hard reasoning.</div>
+          </div>
+
+          <div class="field" id="customModelField" style="display:none;">
+            <label class="field-label" for="customModelInput">Custom model ID</label>
+            <input class="input" type="text" id="customModelInput" placeholder="e.g. claude-3-5-sonnet-20241022">
+          </div>
+        </div>
+
+        <!-- Parameters tab -->
+        <div class="settings-panel" data-panel="params">
+          <div class="field">
+            <label class="field-label" for="temperatureInput">Temperature</label>
+            <div class="slider-wrap">
+              <input class="input" type="range" id="temperatureInput" min="0" max="1" step="0.05" value="1">
+              <span class="slider-value" id="temperatureValue">1.00</span>
+            </div>
+            <div class="field-hint"><b>0</b> = deterministic / focused. <b>1</b> = creative / varied. Default: 1.0.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="maxTokensInput">Max Tokens</label>
+            <input class="input" type="number" id="maxTokensInput" min="1" max="8192" step="1" value="1024">
+            <div class="field-hint">The maximum number of tokens to generate before stopping. Max: <b>8192</b>.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="topPInput">Top P <span style="font-weight:400;color:var(--text-dim)">(optional)</span></label>
+            <div class="slider-wrap">
+              <input class="input" type="range" id="topPInput" min="0" max="1" step="0.01" value="1">
+              <span class="slider-value" id="topPValue">1.00</span>
+            </div>
+            <div class="field-hint">Use nucleus sampling. We recommend altering <b>temperature</b> OR <b>top_p</b>, not both. <b>1.0</b> disables.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="topKInput">Top K <span style="font-weight:400;color:var(--text-dim)">(optional)</span></label>
+            <input class="input" type="number" id="topKInput" min="0" max="500" step="1" placeholder="off">
+            <div class="field-hint">Only sample from the top K options. <b>0</b> = disabled.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="stopSequencesInput">Stop sequences <span style="font-weight:400;color:var(--text-dim)">(optional)</span></label>
+            <input class="input" type="text" id="stopSequencesInput" placeholder="e.g. END, ---, ###">
+            <div class="field-hint">Comma-separated strings. The model will stop generating when it produces any of these.</div>
+          </div>
+        </div>
+
+        <!-- System prompt tab -->
+        <div class="settings-panel" data-panel="system">
+          <div class="field">
+            <label class="field-label" for="systemPromptInput">System Prompt</label>
+            <textarea class="textarea" id="systemPromptInput" placeholder="You are a helpful assistant…" rows="8"></textarea>
+            <div class="field-hint">Sent on every request as the <code>system</code> parameter. Leave empty for no system prompt.</div>
+          </div>
+
+          <div class="field">
+            <button class="input-action" id="systemClear" type="button" style="display:block;width:100%;">Clear system prompt</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-footer-left">
+          Need help? See the
+          <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API docs</a>.
+        </div>
+        <button class="btn-primary" id="settingsSave">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- marked.js for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js"></script>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════════
+     CLAUDE CLI — direct Anthropic API chat client
+     Endpoint: https://api.anthropic.com/v1/messages
+     CORS: handled by the `anthropic-dangerous-direct-browser-access`
+           header (Anthropic's official opt-in for browser use).
+     Storage: settings in localStorage, history in sessionStorage.
+     ═══════════════════════════════════════════════════════════════ */
+
+  const API_URL  = 'https://api.anthropic.com/v1/messages';
+  const ANTHROPIC_VERSION = '2023-06-01';
+  const STORAGE  = 'claude-cli.settings.v1';
+  const HISTORY  = 'claude-cli.history.v1';
+
+  // ── DOM refs ────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const messagesEl  = $('messages');
+  const welcomeEl   = $('welcome');
+  const composerEl  = $('composerInput');
+  const sendBtn     = $('sendBtn');
+  const clearBtn    = $('clearBtn');
+  const settingsBtn = $('settingsBtn');
+  const settingsOverlay = $('settingsOverlay');
+  const settingsClose = $('settingsClose');
+  const settingsSave = $('settingsSave');
+  const modelPill = $('modelPill');
+  const modelName = $('modelName');
+  const modelDot  = $('modelDot');
+  const composerStatus = $('composerStatus');
+
+  // Settings inputs
+  const apiKeyInput    = $('apiKeyInput');
+  const apiKeyToggle   = $('apiKeyToggle');
+  const apiKeyClear    = $('apiKeyClear');
+  const keyStatus      = $('keyStatus');
+  const streamEnabled  = $('streamEnabled');
+  const markdownEnabled = $('markdownEnabled');
+  const modelSelect    = $('modelSelect');
+  const customModelField = $('customModelField');
+  const customModelInput = $('customModelInput');
+  const modelHint      = $('modelHint');
+  const temperatureInput = $('temperatureInput');
+  const temperatureValue = $('temperatureValue');
+  const maxTokensInput = $('maxTokensInput');
+  const topPInput      = $('topPInput');
+  const topPValue      = $('topPValue');
+  const topKInput      = $('topKInput');
+  const stopSequencesInput = $('stopSequencesInput');
+  const systemPromptInput = $('systemPromptInput');
+  const systemClear = $('systemClear');
+
+  // ── State ───────────────────────────────────────────────────
+  const state = {
+    apiKey: '',
+    model: 'claude-3-5-sonnet-latest',
+    customModel: '',
+    temperature: 1.0,
+    max_tokens: 1024,
+    top_p: 1.0,
+    top_k: null,
+    stop_sequences: [],
+    system: '',
+    stream: true,
+    markdown: true,
+  };
+
+  let messages = [];       // Anthropic-format messages (only user/assistant, alternates)
+  let isStreaming = false;
+  let abortController = null;
+
+  // ── Persistence (autosave helper so users don't lose typed values) ──────
+  let _saveTimer = null;
+  function scheduleSave() {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(saveSettings, 300);
+  }
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(STORAGE);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      Object.assign(state, saved);
+    } catch (e) { /* ignore */ }
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(STORAGE, JSON.stringify(state));
+    } catch (e) { /* quota */ }
+  }
+
+  function loadHistory() {
+    try {
+      const raw = sessionStorage.getItem(HISTORY);
+      if (!raw) return [];
+      return JSON.parse(raw);
+    } catch (e) { return []; }
+  }
+
+  function saveHistory() {
+    try {
+      // Don't store system or anything except user/assistant messages
+      const trimmed = messages.slice(-40);
+      sessionStorage.setItem(HISTORY, JSON.stringify(trimmed));
+    } catch (e) { /* ignore */ }
+  }
+
+  // ── Settings UI ─────────────────────────────────────────────
+  function renderSettingsUI() {
+    apiKeyInput.value = state.apiKey || '';
+    streamEnabled.checked = !!state.stream;
+    markdownEnabled.checked = !!state.markdown;
+    modelSelect.value = state.model === state.customModel ? '__custom__' : state.model;
+    customModelField.style.display = modelSelect.value === '__custom__' ? '' : 'none';
+    customModelInput.value = state.customModel || '';
+    modelHint.textContent = modelHintFor(state.model);
+
+    temperatureInput.value = state.temperature;
+    temperatureValue.textContent = Number(state.temperature).toFixed(2);
+    maxTokensInput.value = state.max_tokens;
+    topPInput.value = state.top_p;
+    topPValue.textContent = Number(state.top_p).toFixed(2);
+    topKInput.value = (state.top_k == null) ? '' : state.top_k;
+    stopSequencesInput.value = (state.stop_sequences || []).join(', ');
+    systemPromptInput.value = state.system || '';
+
+    updateKeyStatus();
+    updateModelPill();
+  }
+
+  function modelHintFor(model) {
+    if (model.includes('opus'))   return 'Opus — most capable, slowest, highest cost.';
+    if (model.includes('haiku'))  return 'Haiku — fastest and cheapest. Great for quick replies.';
+    if (model.includes('sonnet')) return 'Sonnet — best balance of speed, intelligence, and cost.';
+    return 'Custom model ID.';
+  }
+
+  function updateKeyStatus() {
+    if (state.apiKey && state.apiKey.startsWith('sk-ant-')) {
+      keyStatus.className = 'key-status ok';
+      keyStatus.textContent = '✓ Key looks valid (starts with sk-ant-).';
+    } else if (state.apiKey) {
+      keyStatus.className = 'key-status empty';
+      keyStatus.textContent = '⚠ Key doesn\'t start with sk-ant- — make sure it\'s a real Anthropic key.';
+    } else {
+      keyStatus.className = 'key-status empty';
+      keyStatus.textContent = 'No key set. Add one to start chatting.';
+    }
+    updateModelPill();
+    updateComposerStatus();
+  }
+
+  function updateModelPill() {
+    if (!state.apiKey) {
+      modelDot.classList.add('no-key');
+      modelName.textContent = '— no key —';
+    } else {
+      modelDot.classList.remove('no-key');
+      modelName.textContent = shortModelName(state.model);
+    }
+  }
+
+  function shortModelName(model) {
+    if (model.includes('opus')) return 'Opus';
+    if (model.includes('haiku')) return 'Haiku';
+    if (model.includes('sonnet')) return 'Sonnet';
+    return model;
+  }
+
+  function updateComposerStatus() {
+    if (!state.apiKey) {
+      composerStatus.innerHTML = '<span class="no-key-warning">⚠ <a id="openSettingsFromHint">Add an API key in Settings</a> to start chatting.</span>';
+      $('openSettingsFromHint').onclick = openSettings;
+    } else {
+      composerStatus.textContent = '';
+    }
+  }
+
+  function readSettingsFromUI() {
+    state.apiKey = apiKeyInput.value.trim();
+    state.stream = streamEnabled.checked;
+    state.markdown = markdownEnabled.checked;
+    if (modelSelect.value === '__custom__') {
+      state.customModel = customModelInput.value.trim();
+      state.model = state.customModel || 'claude-3-5-sonnet-latest';
+    } else {
+      state.model = modelSelect.value;
+      state.customModel = '';
+    }
+    state.temperature = parseFloat(temperatureInput.value);
+    state.max_tokens = clamp(parseInt(maxTokensInput.value, 10) || 1024, 1, 8192);
+    state.top_p = parseFloat(topPInput.value);
+    const tkRaw = topKInput.value.trim();
+    state.top_k = tkRaw === '' ? null : clamp(parseInt(tkRaw, 10) || 0, 0, 500);
+    const stopRaw = stopSequencesInput.value.trim();
+    state.stop_sequences = stopRaw
+      ? stopRaw.split(',').map(s => s.trim()).filter(Boolean).slice(0, 4)
+      : [];
+    state.system = systemPromptInput.value;
+  }
+
+  function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+  // ── Tabs ────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.settings-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === name);
+    });
+    document.querySelectorAll('.settings-panel').forEach(p => {
+      p.classList.toggle('active', p.dataset.panel === name);
+    });
+  }
+
+  // ── Modal controls ──────────────────────────────────────────
+  function openSettings() {
+    readSettingsFromUI(); // pull whatever is in UI so toggle/custom reflect
+    renderSettingsUI();
+    settingsOverlay.classList.add('open');
+  }
+  function closeSettings() {
+    settingsOverlay.classList.remove('open');
+  }
+  function saveAndClose() {
+    readSettingsFromUI();
+    saveSettings();
+    updateKeyStatus();
+    closeSettings();
+  }
+
+  settingsBtn.addEventListener('click', openSettings);
+  settingsClose.addEventListener('click', closeSettings);
+  settingsSave.addEventListener('click', saveAndClose);
+  settingsOverlay.addEventListener('click', e => { if (e.target === settingsOverlay) closeSettings(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && settingsOverlay.classList.contains('open')) closeSettings();
+  });
+
+  document.querySelectorAll('.settings-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+
+  apiKeyToggle.addEventListener('click', () => {
+    const isPwd = apiKeyInput.type === 'password';
+    apiKeyInput.type = isPwd ? 'text' : 'password';
+    apiKeyToggle.textContent = isPwd ? 'hide' : 'show';
+  });
+
+  apiKeyClear.addEventListener('click', () => {
+    apiKeyInput.value = '';
+    readSettingsFromUI();
+    saveSettings();
+    updateKeyStatus();
+  });
+
+  systemClear.addEventListener('click', () => {
+    systemPromptInput.value = '';
+  });
+
+  apiKeyInput.addEventListener('input', () => {
+    state.apiKey = apiKeyInput.value.trim();
+    updateKeyStatus();
+    scheduleSave();
+  });
+
+  modelSelect.addEventListener('change', () => {
+    customModelField.style.display = modelSelect.value === '__custom__' ? '' : 'none';
+    const m = modelSelect.value === '__custom__' ? (customModelInput.value || 'custom') : modelSelect.value;
+    modelHint.textContent = modelHintFor(m);
+  });
+
+  customModelInput.addEventListener('input', () => {
+    modelHint.textContent = modelHintFor(customModelInput.value || 'custom');
+  });
+
+  temperatureInput.addEventListener('input', () => {
+    temperatureValue.textContent = Number(temperatureInput.value).toFixed(2);
+  });
+  topPInput.addEventListener('input', () => {
+    topPValue.textContent = Number(topPInput.value).toFixed(2);
+  });
+
+  // ── Composer ────────────────────────────────────────────────
+  composerEl.addEventListener('input', () => autoResize(composerEl));
+  composerEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendCurrent();
+    }
+  });
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  }
+  sendBtn.addEventListener('click', () => {
+    if (isStreaming && abortController) {
+      abortController.abort();
+      return;
+    }
+    sendCurrent();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if (isStreaming) return;
+    if (messages.length === 0) return;
+    if (!confirm('Start a new conversation? Current chat will be cleared (settings are kept).')) return;
+    messages = [];
+    saveHistory();
+    renderMessages();
+  });
+
+  // Suggestion chips
+  document.querySelectorAll('.suggestion').forEach(btn => {
+    btn.addEventListener('click', () => {
+      composerEl.value = btn.dataset.prompt;
+      autoResize(composerEl);
+      composerEl.focus();
+    });
+  });
+
+  function hideWelcome() { welcomeEl.classList.remove('show'); }
+  function showWelcome() {
+    if (messages.length === 0) welcomeEl.classList.add('show');
+  }
+
+  // ── Render messages ─────────────────────────────────────────
+  function renderMessages() {
+    messagesEl.innerHTML = '';
+    if (messages.length === 0) {
+      showWelcome();
+      return;
+    } else {
+      hideWelcome();
+    }
+    for (const m of messages) {
+      appendMessageDOM(m.role, m.content, m._meta || {});
+    }
+    scrollToBottom();
+  }
+
+  function appendMessageDOM(role, contentText, meta = {}) {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + role;
+    if (meta.error) wrap.classList.add('error');
+
+    const avatar = document.createElement('div');
+    avatar.className = 'msg-avatar';
+    avatar.textContent = role === 'user' ? 'YOU' : '✦';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.innerHTML = renderText(contentText || '');
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+
+    // Meta row for assistant (copy + token stats when done)
+    if (role === 'assistant' && !meta.streaming && !meta.error) {
+      const metaRow = document.createElement('div');
+      metaRow.className = 'msg-meta';
+      const copyBtn = document.createElement('button');
+      copyBtn.title = 'Copy';
+      copyBtn.textContent = '⎘ copy';
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(contentText || '');
+          copyBtn.textContent = '✓ copied';
+          copyBtn.classList.add('copied');
+          setTimeout(() => { copyBtn.textContent = '⎘ copy'; copyBtn.classList.remove('copied'); }, 1400);
+        } catch (e) { /* ignore */ }
+      });
+      metaRow.appendChild(copyBtn);
+      wrap.appendChild(metaRow);
+    }
+
+    messagesEl.appendChild(wrap);
+    scrollToBottom();
+    return bubble;
+  }
+
+  function renderText(text) {
+    if (!state.markdown) return escapeHtml(text);
+    try {
+      // marked is loaded from CDN
+      const raw = marked.parse(text, { breaks: true, gfm: true });
+      return raw;
+    } catch (e) {
+      return escapeHtml(text);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function scrollToBottom() {
+    requestAnimationFrame(() => {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+  }
+
+  // ── Send ────────────────────────────────────────────────────
+  async function sendCurrent() {
+    if (isStreaming) return;
+
+    const text = composerEl.value.trim();
+    if (!text) return;
+
+    if (!state.apiKey) {
+      openSettings();
+      return;
+    }
+
+    hideWelcome();
+    isStreaming = true;
+    abortController = new AbortController();
+    sendBtn.classList.add('stop');
+    sendBtn.innerHTML = stopSvg();
+
+    // Push user message into state + DOM
+    messages.push({ role: 'user', content: text });
+    saveHistory();
+    appendMessageDOM('user', text);
+
+    // Clear composer
+    composerEl.value = '';
+    autoResize(composerEl);
+
+    // Append placeholder assistant bubble
+    const assistantText = { content: '' };
+    const bubble = appendMessageDOM('assistant', '', { streaming: true });
+
+    try {
+      if (state.stream) {
+        await streamResponse(bubble, assistantText);
+      } else {
+        await nonStreamResponse(bubble, assistantText);
+      }
+      messages.push({ role: 'assistant', content: assistantText.content });
+      saveHistory();
+      // Replace streaming placeholder bubble content with cached bubble
+      // (already rendered). Just clean up class.
+      // Add copy meta row by rebuilding messages not strictly needed;
+      // user gets it on next render. Keep simple.
+      // But we want the copy button immediately:
+      // We need to refresh meta row. Easiest: re-render just this bubble.
+      // Find the wrap & append meta row.
+      const wrap = bubble.parentElement;
+      let metaRow = wrap.querySelector('.msg-meta');
+      if (!metaRow) {
+        metaRow = document.createElement('div');
+        metaRow.className = 'msg-meta';
+        const copyBtn = document.createElement('button');
+        copyBtn.title = 'Copy';
+        copyBtn.textContent = '⎘ copy';
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(assistantText.content || '');
+            copyBtn.textContent = '✓ copied';
+            copyBtn.classList.add('copied');
+            setTimeout(() => { copyBtn.textContent = '⎘ copy'; copyBtn.classList.remove('copied'); }, 1400);
+          } catch (e) {}
+        });
+        metaRow.appendChild(copyBtn);
+        wrap.appendChild(metaRow);
+      }
+      // remove the streaming cursor if present
+      const cursor = bubble.parentElement.querySelector('.typing-cursor');
+      if (cursor) cursor.remove();
+    } catch (err) {
+      console.error(err);
+      const friendly = friendlyError(err);
+      bubble.innerHTML = ''; // replace any partial
+      bubble.innerHTML =
+        renderText(friendly.message) +
+        `<div class="err-actions"> ${
+          friendly.action === 'open_settings'
+            ? '<span class="err-link" id="errOpenSettings">Open Settings →</span>'
+            : ''
+        }</div>`;
+      bubble.parentElement.classList.add('error');
+      const ie = $('errOpenSettings');
+      if (ie) ie.addEventListener('click', openSettings);
+    } finally {
+      isStreaming = false;
+      abortController = null;
+      sendBtn.classList.remove('stop');
+      sendBtn.innerHTML = sendSvg();
+      saveHistory();
+    }
+  }
+
+  function sendSvg() {
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+  }
+  function stopSvg() {
+    return `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`;
+  }
+
+  // Build request body
+  function buildPayload() {
+    // Only include top_k / top_p / stop_sequences when meaningful
+    const payload = {
+      model: state.model,
+      max_tokens: state.max_tokens,
+      messages: messages.map(m => ({ role: m.role, content: m.content })),
+    };
+    if (state.system && state.system.trim()) payload.system = state.system;
+    if (typeof state.temperature === 'number') payload.temperature = state.temperature;
+    if (state.top_p != null && state.top_p !== 1) payload.top_p = state.top_p;
+    if (state.top_k != null && state.top_k > 0) payload.top_k = state.top_k;
+    if (Array.isArray(state.stop_sequences) && state.stop_sequences.length) {
+      payload.stop_sequences = state.stop_sequences;
+    }
+    return payload;
+  }
+
+  // SSE streaming parser
+  async function streamResponse(bubble, acc) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': ANTHROPIC_VERSION,
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify(buildPayload()),
+      signal: abortController.signal,
+    });
+
+    if (!res.ok) {
+      let body = '';
+      try { body = await res.text(); } catch (e) {}
+      const err = parseError(res.status, body);
+      throw err;
+    }
+    if (!res.body) throw new Error('No response body');
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let cursor = document.createElement('span');
+    cursor.className = 'typing-cursor';
+    bubble.appendChild(cursor);
+
+    // Throttled render — re-parse already-streamed text at most every 60ms
+    // so we don't re-render on every token (which would slow down long answers).
+    let lastRender = 0;
+    let pending = false;
+    const maxTokens = state.max_tokens;
+
+    const renderNow = () => {
+      pending = false;
+      lastRender = performance.now();
+      // Render without including cursor in markdown source — we keep the
+      // cursor as a real DOM node appended after parsing.
+      bubble.innerHTML = renderText(acc.content);
+      bubble.appendChild(cursor);
+      scrollToBottom();
+    };
+    const scheduleRender = () => {
+      if (pending) return;
+      const elapsed = performance.now() - lastRender;
+      if (elapsed >= 60) { renderNow(); return; }
+      pending = true;
+      setTimeout(renderNow, Math.max(20, 60 - elapsed));
+    };
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // Parse SSE events separated by blank line
+      let sep;
+      while ((sep = buffer.indexOf('\n\n')) !== -1) {
+        const eventBlock = buffer.slice(0, sep);
+        buffer = buffer.slice(sep + 2);
+        const event = parseSseEvent(eventBlock);
+        if (!event) continue;
+        if (event.type === 'content_block_delta' && event.data?.delta?.type === 'text_delta') {
+          acc.content += event.data.delta.text || '';
+          scheduleRender();
+        } else if (event.type === 'message_stop') {
+          renderNow();
+          return;
+        } else if (event.type === 'error') {
+          throw parseError(500, JSON.stringify(event.data || {}));
+        }
+      }
+    }
+    renderNow(); // final render with whatever remained
+  }
+
+  function parseSseEvent(block) {
+    const lines = block.split('\n');
+    let event = 'message';
+    let data = '';
+    for (const line of lines) {
+      if (line.startsWith('event:')) event = line.slice(6).trim();
+      else if (line.startsWith('data:')) data += line.slice(5).trim();
+    }
+    if (!data) return null;
+    try {
+      const parsed = JSON.parse(data);
+      parsed.type = event;
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function nonStreamResponse(bubble, acc) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': ANTHROPIC_VERSION,
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({ ...buildPayload(), stream: false }),
+      signal: abortController.signal,
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw parseError(res.status, body);
+    }
+    const data = await res.json();
+    const text = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text || '')
+      .join('');
+    acc.content = text;
+    bubble.innerHTML = renderText(text);
+    scrollToBottom();
+  }
+
+  function parseError(status, body) {
+    let parsed = {};
+    try { parsed = JSON.parse(body); } catch (e) {}
+    const msg = parsed?.error?.message || parsed?.message || body || `HTTP ${status}`;
+    const err = new Error(msg);
+    err.status = status;
+    err.apiMessage = msg;
+    return err;
+  }
+
+  function friendlyError(err) {
+    const s = err.status || 0;
+    const msg = err.apiMessage || err.message || 'Unknown error';
+    if (s === 401) {
+      return {
+        message: `🔑 **Invalid API Key.**\n\n${msg}\n\nOpen Settings to update your key.`,
+        action: 'open_settings',
+      };
+    }
+    if (s === 403) {
+      return { message: `⛔ **Forbidden.**\n\n${msg}` };
+    }
+    if (s === 429) {
+      return { message: `⏱ **Rate limit hit.**\n\n${msg}\n\nSlow down or upgrade your tier.` };
+    }
+    if (s === 400) {
+      return { message: `⚠️ **Bad request.**\n\n${msg}\n\nTry lowering Max Tokens, or check your parameters.` };
+    }
+    if (s === 529 || s === 503) {
+      return { message: `🔥 **Anthropic is overloaded.**\n\n${msg}\n\nTry again in a moment.` };
+    }
+    if (err.name === 'AbortError') {
+      return { message: `⏹ **Stopped.**\n\nRequest was cancelled.` };
+    }
+    if (/Failed to fetch|NetworkError|TypeError/i.test(msg)) {
+      return {
+        message: `📡 **Network error.**\n\nCouldn't reach \`api.anthropic.com\`.\n\nIf you're behind a filter, try your Nebula Proxy or a CORS proxy.`,
+        action: '',
+      };
+    }
+    return { message: `❌ **Error.**\n\n${msg}` };
+  }
+
+  // ── Init ─────────────────────────────────────────────────────
+  loadSettings();
+  messages = loadHistory();
+  renderMessages();
+  renderSettingsUI();
+
+  // If there's a saved key, mark composer as ready
+  updateKeyStatus();
+
+  // Auto-resize composer on load
+  autoResize(composerEl);
+
+  // Click-outside to dismiss welcome chips? Welcome hides as soon as a message is sent.
+  // Focus composer on load so user can immediately type
+  if (state.apiKey) composerEl.focus();
+  </script>
+</body>
+</html>

@@ -71,6 +71,11 @@
     background:linear-gradient(135deg,#0a0a2e,#1a1a4e);
     border:1px solid #6c63ff; color:#a29bfe; letter-spacing:1px;
   }
+  .esb-btn.claude {
+    background:linear-gradient(135deg,#2a1408,#3a1a0e);
+    border:1px solid #D97757; color:#E89170;
+    text-shadow:0 0 6px rgba(232,145,112,0.4); letter-spacing:1px;
+  }
   .esb-btn.home { background:#2c3e50; border:1px solid #7f8c8d; color:#bdc3c7; }
   #esb-tab-select {
     width:100%; padding:8px 10px; border-radius:6px; border:none;
@@ -94,6 +99,7 @@
       <button class="esb-btn red"    id="esb-lock-btn">🔓 Disable Close Confirm</button>
       <a  class="esb-btn godmode"    href="${root}godmode/index.html">⛓️‍💥 G0DM0D3 AI</a>
       <a  class="esb-btn proxy"      href="${root}proxy/index.html">🌀 Web Proxy</a>
+      <a  class="esb-btn claude"     href="${root}claude-cli/index.html">🧠 Claude CLI</a>
 
       <h3>🔔 Notifications</h3>
       <button class="esb-btn blue" id="esb-notify-btn">Send Notifications</button>
