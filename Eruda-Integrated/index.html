@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Button Link</title>
+  <link rel="stylesheet" href="effects.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body data-theme-color="#6c63ff" data-splash-name="Unity">
@@ -78,7 +79,44 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      MAIN CONTENT
 ════════════════════════════════════════════════════════════════════════════ -->
-<div id="main-content">
+<div id="main-content" class="unity-page">
+
+  <!-- HERO -->
+  <header class="portal-hero">
+    <span class="pill">🪐 Unity Portal · v4</span>
+    <h1 class="portal-title text-gradient">Cross-Browser Tools.<br>One Quiet URL.</h1>
+    <p class="portal-sub">Pick a destination below — or hover the blue <code>⟩</code> tab on the left for the universal tools sidebar. Everything ships from this page.</p>
+  </header>
+
+  <!-- FEATURED APPS -->
+  <nav class="featured-grid" aria-label="Featured apps">
+    <a class="unity-card glass-panel interactive ring-soft"
+       href="godmode/index.html">
+      <span class="uc-icon">⛓️‍💥</span>
+      <span class="uc-title">G0DM0D3 AI</span>
+      <span class="uc-desc">Race multiple LLM models in parallel and pick the winner.</span>
+      <span class="uc-cta">Open →</span>
+    </a>
+    <a class="unity-card glass-panel interactive" href="proxy/index.html">
+      <span class="uc-icon">🌀</span>
+      <span class="uc-title">Web Proxy</span>
+      <span class="uc-desc">Browse the web through an Ultraviolet proxy — 8 built-in nodes.</span>
+      <span class="uc-cta">Open →</span>
+    </a>
+    <a class="unity-card glass-panel interactive" href="claude-cli/index.html">
+      <span class="uc-icon">🧠</span>
+      <span class="uc-title">Claude CLI</span>
+      <span class="uc-desc">Chat with Anthropic Claude from the browser, with streaming + code highlighting.</span>
+      <span class="uc-cta">Open →</span>
+    </a>
+    <a class="unity-card glass-panel interactive" href="games/index.html">
+      <span class="uc-icon">🕹️</span>
+      <span class="uc-title">Games</span>
+      <span class="uc-desc">Vex, OvO, SM64, the Random series and more, all playable in one tab.</span>
+      <span class="uc-cta">Open →</span>
+    </a>
+  </nav>
+
 
   <!-- ── AI INPUT (Feature 3: Enter key fixed in script.js) ───────────────── -->
   <div class="ai-container">

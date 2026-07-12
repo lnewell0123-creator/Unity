@@ -59,6 +59,18 @@
 
   const THEME = hexToRgb(themeColor);
 
+  // Publish the theme to CSS custom properties so effects.css (and any
+  // page stylesheet) can read both a hex and an rgb-triplet form.
+  // --particle-rgb is consumed by rgba(var(--unity-accent-rgb), ...) which
+  // is more composable than parsing hex everywhere.
+  try {
+    document.documentElement.style.setProperty('--particle-color', themeColor);
+    document.documentElement.style.setProperty(
+      '--particle-rgb',
+      `${THEME.r} ${THEME.g} ${THEME.b}`
+    );
+  } catch (e) { /* noop: inert styles only */ }
+
   // ── inject shared CSS for splash + canvas ──────────────────────
   const style = document.createElement('style');
   style.textContent = `

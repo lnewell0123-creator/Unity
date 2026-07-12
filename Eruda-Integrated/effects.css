@@ -1,0 +1,511 @@
+/* ═══════════════════════════════════════════════════════════════
+   Unity shared design system — effects.css
+
+   Loaded by every page alongside effects.js. Per-page theme color
+   is supplied via the body's data-theme-color attribute; effects.js
+   picks that up and writes it to --particle-color (and the matching
+   RGB triplet --particle-rgb). This file uses both.
+
+   Reusable component classes (BEM-ish, no nested media queries
+   beyond the global mobile breakpoints):
+     .unity-page           — page wrapper, dark bg + particles show through
+     .glass-panel          — backdrop-blurred translucent surface
+     .glass-panel.tinted   — slight theme tint
+     .glass-panel.interactive — adds hover lift + theme border glow
+     .unity-card           — content card variant of glass-panel
+     .btn-glass            — neutral button on glass surfaces
+     .btn-primary          — gradient button (theme accent driven)
+     .text-gradient        — gradient hero text
+     .pill                 — small caps chip
+     .pill.theme           — chip in current theme color
+     .ring-soft            — ambient theme shadow ring around element
+
+   Per-page accessibility: respects prefers-reduced-motion.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Base tokens. --particle-color and --particle-rgb are injected
+      by effects.js from body[data-theme-color].  Falls back to violet
+      default so the file is safe to load standalone. ──────────── */
+:root {
+  --unity-bg:           #07060f;
+  --unity-bg-2:         #0e0c1c;
+  --unity-surface:      rgba(20, 18, 40, 0.55);
+  --unity-surface-2:    rgba(40, 35, 70, 0.45);
+  --unity-border:       rgba(255, 255, 255, 0.08);
+  --unity-border-strong:rgba(255, 255, 255, 0.16);
+
+  --unity-text:         #ececfa;
+  --unity-text-muted:   #b4b4d4;
+  --unity-text-dim:     #7a7a9a;
+
+  --unity-accent:       var(--particle-color, #6c63ff);
+  --unity-accent-2:     var(--particle-color, #a29bfe);
+  --unity-accent-rgb:   var(--particle-rgb,  108 99 255);
+  --unity-glow:         rgba(var(--particle-rgb, 108 99 255), 0.45);
+  --unity-glow-soft:    rgba(var(--particle-rgb, 108 99 255), 0.18);
+
+  --unity-radius:       16px;
+  --unity-radius-sm:    10px;
+  --unity-trans-fast:   .15s cubic-bezier(.2,.8,.2,1);
+  --unity-trans-mid:    .28s cubic-bezier(.2,.8,.2,1);
+  --unity-trans-bounce: .32s cubic-bezier(.175,.885,.32,1.275);
+
+  color-scheme: dark;
+}
+
+/* ── Page wrapper. Lets particles shine through, fixes the
+      Office-blue plain background that index.html used to have. ── */
+.unity-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, var(--unity-glow-soft), transparent 60%),
+    linear-gradient(180deg, var(--unity-bg) 0%, var(--unity-bg-2) 100%);
+  color: var(--unity-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  padding: 0;
+  position: relative;
+}
+
+/* ── Glass panel. Used for hero cards, modals, sidebar surfaces,
+      feature cards. Translucent so particles show through. ────── */
+.glass-panel {
+  background: var(--unity-surface);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--unity-border);
+  border-radius: var(--unity-radius);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform var(--unity-trans-mid),
+              border-color var(--unity-trans-fast),
+              box-shadow var(--unity-trans-mid);
+}
+.glass-panel.tinted {
+  background: linear-gradient(135deg,
+              rgba(var(--unity-accent-rgb), 0.10),
+              rgba(var(--unity-accent-rgb), 0.04));
+  border-color: rgba(var(--unity-accent-rgb), 0.25);
+}
+.glass-panel.interactive { cursor: pointer; }
+.glass-panel.interactive:hover {
+  transform: translateY(-4px);
+  border-color: rgba(var(--unity-accent-rgb), 0.65);
+  box-shadow:
+    0 14px 40px rgba(var(--unity-accent-rgb), 0.35),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.glass-panel.interactive:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* ── Card variant. Title + body, used for sub-app feature cards
+      on the index page hero grid. ─────────────────────────────── */
+.unity-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 18px;
+  text-decoration: none;
+  color: var(--unity-text);
+}
+.unity-card .uc-icon  { font-size: 30px; line-height: 1; }
+.unity-card .uc-title { font-size: 16px; font-weight: 700; letter-spacing: 0.2px; }
+.unity-card .uc-desc  {
+  font-size: 12.5px; line-height: 1.55;
+  color: var(--unity-text-muted);
+}
+.unity-card .uc-cta {
+  margin-top: 4px;
+  font-size: 11px; font-weight: 700; letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(var(--unity-accent-rgb), 0.95);
+}
+.unity-card.featured {
+  background: linear-gradient(135deg,
+              rgba(var(--unity-accent-rgb), 0.22),
+              rgba(var(--unity-accent-rgb), 0.06));
+  border-color: rgba(var(--unity-accent-rgb), 0.45);
+}
+
+/* ── Buttons. Standardise the look across legacy pages. ───────── */
+.btn-glass {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--unity-border);
+  border-radius: 12px;
+  color: var(--unity-text);
+  font: 600 13px/1 'Inter', system-ui, sans-serif;
+  cursor: pointer; user-select: none;
+  text-decoration: none;
+  transition: all var(--unity-trans-fast);
+}
+.btn-glass:hover {
+  background: rgba(var(--unity-accent-rgb), 0.10);
+  border-color: rgba(var(--unity-accent-rgb), 0.5);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--unity-glow-soft);
+}
+.btn-glass:active { transform: translateY(0) scale(0.98); }
+
+.btn-primary {
+  background: linear-gradient(135deg,
+              rgba(var(--unity-accent-rgb), 1),
+              rgba(var(--unity-accent-rgb), 0.7));
+  border: 1px solid rgba(var(--unity-accent-rgb), 0.65);
+  color: #fff;
+  box-shadow: 0 4px 18px var(--unity-glow);
+}
+.btn-primary:hover {
+  filter: brightness(1.12);
+  box-shadow: 0 6px 24px var(--unity-glow);
+}
+
+/* ── Gradient heading text ────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(135deg,
+              #fff 0%,
+              rgba(var(--unity-accent-rgb), 1) 50%,
+              rgba(var(--unity-accent-rgb), 0.7) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ── Pill — small uppercase chip used on meta data, status,
+      eyebrow labels above titles. ─────────────────────────────── */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(var(--unity-accent-rgb), 0.10);
+  border: 1px solid rgba(var(--unity-accent-rgb), 0.30);
+  color: rgba(var(--unity-accent-rgb), 1);
+  font-size: 10px; font-weight: 800; letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+.pill.muted {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--unity-border-strong);
+  color: var(--unity-text-muted);
+}
+
+/* ── Soft glow ring. Use as ambient decoration behind hero
+      icons or featured cards. ─────────────────────────────────── */
+.ring-soft {
+  position: relative;
+}
+.ring-soft::before {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  background: radial-gradient(circle,
+              rgba(var(--unity-accent-rgb), 0.30) 0%,
+              transparent 60%);
+  filter: blur(20px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ── Typography defaults for content sitting inside .unity-page */
+.unity-page h1, .unity-page h2 { letter-spacing: -0.5px; }
+.unity-page p { line-height: 1.6; }
+.unity-page a:not(.btn-glass):not(.unity-card):not(.sb-btn):not(.esb-btn):hover {
+  color: rgba(var(--unity-accent-rgb), 1);
+}
+
+/* ── Accessibility: less motion for users who opt out. ───────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration:  0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ── Mobile padding tweaks ────────────────────────────────────── */
+@media (max-width: 600px) {
+  .glass-panel { border-radius: 14px; }
+  .unity-card  { padding: 16px 14px; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   INDEX-PAGE PORTAL HERO + FEATURED-APPS GRID
+   Used by /index.html (root). Other pages keep using the same
+   .unity-page / .glass-panel primitives but might not use these.
+   ════════════════════════════════════════════════════════════════ */
+
+.portal-hero {
+  position: relative;
+  max-width: 960px;
+  margin: 56px auto 28px;
+  padding: 38px 32px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 0%,
+                rgba(var(--unity-accent-rgb), 0.15),
+                transparent 70%);
+}
+.portal-hero::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 22px;
+  padding: 1px;
+  background: linear-gradient(135deg,
+              rgba(var(--unity-accent-rgb), 0.55),
+              rgba(var(--unity-accent-rgb), 0.05) 60%,
+              rgba(var(--unity-accent-rgb), 0.45));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  animation: portal-border-pulse 6s ease-in-out infinite alternate;
+}
+@keyframes portal-border-pulse {
+  from { opacity: .55; }
+  to   { opacity: 1; }
+}
+.portal-title {
+  font-size: clamp(34px, 5.4vw, 56px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -1px;
+  margin: 0;
+}
+.portal-sub {
+  margin: 0;
+  max-width: 620px;
+  font-size: 14px;
+  color: var(--unity-text-muted);
+}
+.portal-sub code {
+  background: rgba(var(--unity-accent-rgb), 0.15);
+  color: rgba(var(--unity-accent-rgb), 1);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  max-width: 960px;
+  margin: 0 auto 32px;
+  padding: 0 24px;
+}
+.featured-grid .unity-card { min-height: 150px; }
+
+/* stagger entrance for cards on the index portal */
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.featured-grid .unity-card {
+  animation: card-rise 480ms cubic-bezier(.2,.8,.2,1) both;
+}
+.featured-grid .unity-card:nth-child(1) { animation-delay: 60ms; }
+.featured-grid .unity-card:nth-child(2) { animation-delay: 130ms; }
+.featured-grid .unity-card:nth-child(3) { animation-delay: 200ms; }
+.featured-grid .unity-card:nth-child(4) { animation-delay: 270ms; }
+.portal-hero       { animation: card-rise 540ms cubic-bezier(.2,.8,.2,1) both; }
+
+/* ── The "tools" lower section (Ask AI / panic settings /
+      copy notification) inside .unity-page. We reuse the page's
+      existing children but give them glass surfaces. ─────────── */
+.portal-section {
+  max-width: 760px;
+  margin: 0 auto 22px;
+  padding: 22px 24px;
+}
+.portal-section h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-portal-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ai-portal-row input[type="text"], .ai-portal-row input[type="url"] {
+  flex: 1;
+  padding: 11px 14px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--unity-border-strong);
+  border-radius: var(--unity-radius-sm);
+  color: var(--unity-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--unity-trans-fast),
+              box-shadow    var(--unity-trans-fast);
+}
+.ai-portal-row input:focus {
+  border-color: rgba(var(--unity-accent-rgb), 0.7);
+  box-shadow: 0 0 0 3px var(--unity-glow-soft);
+}
+.response-box {
+  margin-top: 14px;
+  padding: 14px;
+  min-height: 48px;
+  background: rgba(0,0,0,0.18);
+  border-radius: 10px;
+  border: 1px dashed var(--unity-border-strong);
+  font-size: 13.5px;
+  color: var(--unity-text-muted);
+}
+.panic-save-btn,
+.ai-portal-btn {
+  padding: 11px 22px;
+  background: linear-gradient(135deg,
+              rgba(var(--unity-accent-rgb), 1),
+              rgba(var(--unity-accent-rgb), 0.55));
+  border: 1px solid rgba(var(--unity-accent-rgb), 0.5);
+  border-radius: var(--unity-radius-sm);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px var(--unity-glow);
+  transition: transform var(--unity-trans-fast),
+              filter   var(--unity-trans-fast);
+}
+.panic-save-btn:hover,
+.ai-portal-btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+
+.panic-current {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  color: var(--unity-text-muted);
+}
+.panic-current strong { color: var(--unity-text); }
+
+/* ── Override the legacy sidebar (.sb-btn) so it visually matches
+      the new glass theme, but only on pages that link effects.css.
+      Old .sb-btn defaults stay intact for pages that don't. ─── */
+.sb-btn {
+  background: rgba(255,255,255,0.04) !important;
+  color: var(--unity-text) !important;
+  border: 1px solid var(--unity-border) !important;
+  border-radius: 10px !important;
+  transition: all var(--unity-trans-fast);
+  font-weight: 600 !important;
+}
+.sb-btn:hover {
+  background: rgba(var(--unity-accent-rgb), 0.10) !important;
+  border-color: rgba(var(--unity-accent-rgb), 0.4) !important;
+  color: #fff !important;
+  transform: translateX(2px);
+}
+#sidebar {
+  background: rgba(10, 8, 20, 0.55) !important;
+  border: 1px solid var(--unity-border) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+          backdrop-filter: blur(16px) saturate(140%);
+}
+#sidebar-inner select {
+  background: rgba(0,0,0,0.3) !important;
+  color: var(--unity-text) !important;
+  border: 1px solid var(--unity-border) !important;
+}
+
+/* ── Reduce vertical padding inside .unity-page so cards nest ─── */
+.unity-page > .portal-section + .portal-section { margin-top: -10px; }
+
+/* ── Proxy iframe chrome polish ──────────────────────────────── */
+#frame-container.active {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%,
+                rgba(var(--unity-accent-rgb), 0.10),
+                transparent 70%);
+}
+#proxy-loading {
+  background: rgba(7, 6, 15, 0.92) !important;
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+}
+#frame-close {
+  background: linear-gradient(135deg,
+              rgba(var(--unity-accent-rgb), 1),
+              rgba(var(--unity-accent-rgb), 0.55)) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 18px rgba(var(--unity-accent-rgb), 0.45) !important;
+}
+.proxy-header {
+  background: rgba(20, 18, 40, 0.55) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+          backdrop-filter: blur(14px) saturate(140%);
+}
+.proxy-home .quick-link {
+  background: var(--unity-surface) !important;
+  border: 1px solid var(--unity-border) !important;
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+}
+
+/* ── Godmode hero polish (light touch, won't disturb modals) ─── */
+.godmode-hero {
+  position: relative;
+  padding: 18px 22px;
+  margin: 18px 16px 8px;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg,
+                rgba(0, 255, 65, 0.10),
+                rgba(0, 255, 65, 0.02)),
+    radial-gradient(ellipse 70% 60% at 0% 0%,
+                rgba(0, 255, 65, 0.10),
+                transparent 70%);
+  border: 1px solid rgba(0, 255, 65, 0.30);
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+  box-shadow: 0 0 40px rgba(0, 255, 65, 0.10);
+  animation: godmode-glow 4s ease-in-out infinite alternate;
+}
+@keyframes godmode-glow {
+  from { box-shadow: 0 0 30px rgba(0, 255, 65, 0.06); }
+  to   { box-shadow: 0 0 60px rgba(0, 255, 65, 0.20); }
+}
+.godmode-hero h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #00ff41;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.55);
+}
+.godmode-hero p {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: #b6b6b6;
+}
+
+/* ── Claude-CLI hero polish light align with new theme. The page
+      has its own extensive inline style; these only touch elements
+      NOT explicitly set, so no regression risk. ─────────────── */
+.claude-shell { position: relative; min-height: 100vh; }
+
+/* ── Games portal polish for the chip nav scrollbar hide. ────── */
+.chipnav::-webkit-scrollbar { display: none; }
+.chipnav { scrollbar-width: none; }
