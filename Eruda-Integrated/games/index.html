@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Games</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23a855f7'/%3E%3Cpath d='M9 12h14M11 12v10h3v-3h8v3h3V12' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='14' cy='17' r='1.6' fill='%23fff'/%3E%3Ccircle cx='22' cy='17' r='1.6' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #07060f;
+      --bg: #0a0a1a;
+      --surface: #131326;
+      --surface-2: #1a1a35;
+      --surface-hover: #22224a;
+      --border: #262648;
+      --border-strong: #3a3a6a;
+
+      --violet: #a855f7;
+      --violet-bright: #c084fc;
+      --magenta: #ec4899;
+      --magenta-bright: #f472b6;
+      --cyan: #22d3ee;
+      --cyan-bright: #67e8f9;
+      --pink: #f0abfc;
+
+      --text: #ececfa;
+      --text-mid: #b4b4d4;
+      --text-dim: #7e7ea0;
+      --text-faint: #50506e;
+
+      --success: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --glow-violet: 0 0 24px rgba(168, 85, 247, 0.45);
+      --glow-cyan: 0 0 18px rgba(34, 211, 238, 0.35);
+      --glow-magenta: 0 0 18px rgba(236, 72, 153, 0.35);
+
+      --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: -webkit-fill-available; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    ::selection { background: rgba(168, 85, 247, 0.35); color: #fff; }
+
+    /* Animated gradient backdrop */
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 80% -10%, rgba(168,85,247,0.16), transparent 60%),
+        radial-gradient(ellipse 70% 60% at 0% 100%, rgba(34,211,238,0.10), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 100% 50%, rgba(236,72,153,0.10), transparent 70%),
+        linear-gradient(180deg, var(--bg-deep) 0%, var(--bg) 50%, var(--bg-deep) 100%);
+      animation: bgShift 32s ease-in-out infinite alternate;
+    }
+    @keyframes bgShift {
+      0%   { background-position: 50% 0%, 0% 100%, 100% 50%, 0% 0%; }
+      100% { background-position: 50% 8%, 5% 92%, 95% 52%, 0% 0%; }
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* ═══ TOPBAR ═══ */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 20px;
+      background: rgba(20, 18, 40, 0.55);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+      z-index: 10;
+      position: relative;
+    }
+    .topbar::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: -1px; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168,85,247,0.4), rgba(34,211,238,0.3), transparent);
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 11px;
+      flex-shrink: 0;
+      cursor: pointer;
+      user-select: none;
+    }
+    .brand-icon {
+      width: 32px; height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--violet), var(--magenta));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      box-shadow: var(--glow-violet), inset 0 1px 0 rgba(255,255,255,0.25);
+      transition: transform .25s var(--ease);
+    }
+    .brand:hover .brand-icon { transform: rotate(-8deg) scale(1.05); }
+    .brand-text {
+      display: flex; flex-direction: column;
+      gap: 0;
+    }
+    .brand-name {
+      font-size: 15px; font-weight: 800;
+      letter-spacing: -0.3px;
+      background: linear-gradient(135deg, #fff 0%, var(--violet-bright) 50%, var(--cyan-bright) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .brand-sub {
+      font-size: 10px;
+      color: var(--cyan);
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      font-weight: 700;
+      opacity: 0.85;
+    }
+
+    /* Search input */
+    .search-wrap {
+      flex: 1;
+      max-width: 540px;
+      position: relative;
+      min-width: 0;
+    }
+    .search-wrap .search-svg {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: var(--text-faint);
+      pointer-events: none;
+    }
+    .search {
+      width: 100%;
+      padding: 9px 36px 9px 38px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: all .2s var(--ease);
+    }
+    .search:focus {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--violet);
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2), inset 0 0 0 1px var(--violet);
+    }
+    .search::placeholder { color: var(--text-faint); }
+    .search-clear {
+      position: absolute;
+      right: 8px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.08);
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 14px;
+      display: none;
+      align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .search-clear:hover { background: rgba(255,255,255,0.15); color: var(--text); }
+    .search-clear.show { display: flex; }
+
+    /* Topbar actions cluster */
+    .topbar-actions {
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0;
+    }
+    .server-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 10px 6px 11px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--r-pill, 999px);
+      position: relative;
+      transition: all .2s var(--ease);
+    }
+    .server-pill:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16); }
+    .server-pill .sp-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: breathe 2.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .server-pill .sp-dot.warn { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+    .server-pill .sp-dot.bad  { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+    @keyframes breathe {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+    .server-select {
+      background: transparent;
+      border: none;
+      color: var(--text-mid);
+      font: 600 12px inherit;
+      padding: 0 22px 0 0;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='%23a29bfe'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right center;
+      max-width: 150px;
+      text-overflow: ellipsis;
+    }
+    .server-select option { background: var(--surface); color: var(--text); }
+
+    .icon-btn {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: var(--text-mid);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      transition: all .18s var(--ease);
+    }
+    .icon-btn:hover { color: var(--violet-bright); border-color: rgba(168,85,247,0.5); background: rgba(168,85,247,0.10); transform: translateY(-1px); }
+    .icon-btn:active { transform: translateY(0) scale(0.95); }
+    .icon-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .icon-btn svg { width: 15px; height: 15px; }
+
+    /* ═══ CHIP NAV ═══ */
+    .chipnav-wrap {
+      flex-shrink: 0;
+      padding: 10px 20px 12px;
+      background: rgba(10, 8, 24, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      position: relative;
+    }
+    .chipnav-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--text-faint);
+      letter-spacing: 0.4px;
+    }
+    .chipnav-meta b { color: var(--violet-bright); font-weight: 700; }
+    .chipnav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      /* Right padding so the last chip can be scrolled into the unmasked
+         (fully visible) area instead of being clipped by the edge fade. */
+      padding: 2px 24px 6px 0;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
+      mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+    }
+    .chipnav::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto;
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 13px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--r-pill, 999px);
+      color: var(--text-mid);
+      font: 600 12.5px inherit;
+      cursor: pointer;
+      transition: all .18s var(--ease);
+      white-space: nowrap;
+      scroll-snap-align: start;
+    }
+    .chip:hover {
+      background: rgba(168,85,247,0.10);
+      border-color: rgba(168,85,247,0.4);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .chip.active {
+      background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(236,72,153,0.3));
+      border-color: var(--violet);
+      color: #fff;
+      box-shadow: var(--glow-violet);
+    }
+    .chip .chip-emoji { font-size: 13px; }
+    .chip.empty {
+      color: var(--text-faint);
+      font-style: italic;
+    }
+    .no-results {
+      color: var(--text-faint);
+      font-size: 12px;
+      padding: 6px 10px;
+      font-style: italic;
+    }
+
+    /* ═══ STAGE (iframe area) ═══ */
+    .stage-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .stage {
+      width: 100%; height: 100%;
+      border: none;
+      background: #000;
+      display: none;
+    }
+    .stage.active { display: block; }
+
+    /* Greeting view */
+    .greeting {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px;
+      text-align: center;
+      overflow-y: auto;
+    }
+    .greeting h1 {
+      font-size: 36px; font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #fff 0%, var(--violet-bright) 40%, var(--magenta-bright) 70%, var(--cyan-bright) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 28px rgba(168,85,247,0.20));
+      animation: heroFadeIn .6s var(--ease);
+    }
+    @keyframes heroFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .greeting-sub {
+      max-width: 540px;
+      color: var(--text-mid);
+      font-size: 15.5px;
+      line-height: 1.55;
+      margin-bottom: 28px;
+      animation: heroFadeIn .6s var(--ease) .1s both;
+    }
+    .greeting-sub b { color: var(--violet-bright); font-weight: 600; }
+
+    .greeting-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      max-width: 820px;
+      width: 100%;
+      animation: heroFadeIn .6s var(--ease) .15s both;
+    }
+    .greet-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      color: var(--text);
+      font: 500 13px inherit;
+      cursor: pointer;
+      transition: all .22s var(--ease);
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+    .greet-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168,85,247,0.4), transparent);
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .greet-card:hover {
+      background: rgba(168,85,247,0.08);
+      border-color: rgba(168,85,247,0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.35), 0 0 20px rgba(168,85,247,0.15);
+    }
+    .greet-card:hover::before { opacity: 1; }
+    .greet-card .gc-icon {
+      font-size: 22px; line-height: 1;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 6px var(--glow-violet));
+    }
+    .greet-card .gc-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .greet-card .gc-name { font-weight: 700; font-size: 13.5px; }
+    .greet-card .gc-cat  { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.6px; }
+
+    .greet-hint {
+      margin-top: 18px;
+      font-size: 12.5px;
+      color: var(--text-faint);
+      animation: heroFadeIn .6s var(--ease) .25s both;
+    }
+    .greet-hint b { color: var(--cyan-bright); font-weight: 600; }
+
+    /* ═══ LOADING / STATUS ═══ */
+    .stage-veil {
+      position: absolute; inset: 0;
+      background: rgba(10, 8, 24, 0.85);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: center; justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .stage-veil.show { display: flex; }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(168,85,247,0.20);
+      border-top-color: var(--violet);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .veil-msg {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+    }
+    .veil-msg b { color: var(--violet-bright); }
+    .veil-sub {
+      color: var(--text-dim);
+      font-size: 12.5px;
+      max-width: 380px;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .veil-progress {
+      width: 200px; height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .veil-progress-fill {
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, var(--violet), var(--magenta), var(--cyan));
+      border-radius: 999px;
+      animation: progress 1.6s var(--ease) infinite;
+    }
+    @keyframes progress {
+      0%   { transform: translateX(-100%); width: 30%; }
+      50%  { width: 60%; }
+      100% { transform: translateX(380%); width: 30%; }
+    }
+
+    /* Error / retry UI */
+    .veil-err {
+      background: rgba(248,113,113,0.06);
+      border: 1px solid rgba(248,113,113,0.35);
+      border-radius: 14px;
+      padding: 18px 22px;
+      max-width: 460px;
+      text-align: center;
+    }
+    .veil-err h3 { color: var(--magenta-bright); margin-bottom: 8px; font-size: 15px; }
+    .veil-err p { color: var(--text-mid); font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+    .veil-err .veil-actions { display: flex; gap: 8px; justify-content: center; }
+    .btn {
+      padding: 9px 18px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 9px;
+      color: var(--text);
+      font: 600 13px inherit;
+      cursor: pointer;
+      transition: all .15s var(--ease);
+    }
+    .btn:hover { background: rgba(168,85,247,0.18); border-color: var(--violet); }
+    .btn.primary {
+      background: linear-gradient(135deg, var(--violet), var(--magenta));
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      box-shadow: var(--glow-violet);
+    }
+    .btn.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 22px var(--glow-violet); }
+
+    /* ═══ MOBILE ═══ */
+    @media (max-width: 720px) {
+      .topbar { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
+      .brand-sub { display: none; }
+      .brand-name { font-size: 14px; }
+      .search-wrap { order: 3; flex-basis: 100%; max-width: none; }
+      .server-pill .server-name { display: none; }
+      .chipnav-wrap { padding: 8px 14px 10px; }
+      .greeting h1 { font-size: 26px; }
+      .greeting-sub { font-size: 14px; }
+      .greeting-grid { grid-template-columns: 1fr; max-width: 380px; }
+      .greet-card { padding: 12px 14px; }
+    }
+
+    @supports (-webkit-touch-callout: none) {
+      .chipnav { -webkit-overflow-scrolling: touch; }
+      .search { font-size: 16px; }
+    }
+
+    @media (max-width: 720px) {
+      .topbar { padding-top: max(10px, env(safe-area-inset-top)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+
+  <!-- Persistent shared sidebar -->
+  <script src="../sidebar.js"></script>
+
+  <div class="app">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="brand" id="brandHome" title="Back to home">
+        <div class="brand-icon">🕹️</div>
+        <div class="brand-text">
+          <div class="brand-name">Games</div>
+          <div class="brand-sub">Vex · Random · .io · Retro</div>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <svg class="search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" class="search" id="search" placeholder="Search games (Enter to load first match)" autocomplete="off" spellcheck="false">
+        <button class="search-clear" id="searchClear" type="button" title="Clear search">✕</button>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="server-pill" title="Active proxy server">
+          <span class="sp-dot" id="serverDot"></span>
+          <select class="server-select" id="serverSelect" aria-label="Active proxy server">
+            <!-- options populated by JS -->
+          </select>
+        </div>
+        <button class="icon-btn" id="fullscreenBtn" title="Open current game in a new tab" aria-label="Open in new tab" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        </button>
+        <button class="icon-btn" id="homeBtn" title="Back to greeting" aria-label="Home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h4v-6h6v6h4V10"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Chip nav -->
+    <div class="chipnav-wrap">
+      <div class="chipnav-meta">
+        <span><b id="chipCount">0</b> games · alphanumeric</span>
+        <span id="activeName" style="color: var(--text-faint);">No game loaded</span>
+      </div>
+      <div class="chipnav" id="chipnav"></div>
+    </div>
+
+    <!-- Stage -->
+    <div class="stage-wrap">
+      <!-- `allowfullscreen` is critical for games that need fullscreen
+           (SM64, Vex, etc.). Note we drop `allow-top-navigation` — that
+           flag lets any ad inside the iframe navigate the *parent*
+           tab away from the proxy, breaking the bypass. The
+           user-gated `allow-top-navigation-by-user-activation` stays. -->
+      <iframe class="stage" id="stage" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts allow-top-navigation-by-user-activation allow-downloads"></iframe>
+
+      <div class="stage-veil" id="veil" style="display:none;">
+        <div id="veilLoading">
+          <div class="spinner"></div>
+          <div class="veil-msg">Routing through <b id="veilServer">proxy</b>…</div>
+          <div class="veil-sub">Your game is being pulled through the active Ultraviolet server. If it stalls, try a different server in the topbar.</div>
+          <div class="veil-progress"><div class="veil-progress-fill"></div></div>
+        </div>
+        <div id="veilError" style="display:none;">
+          <div class="veil-err">
+            <h3>Couldn't load the game</h3>
+            <p id="veilErrMsg">The proxy couldn't reach this game, or it's refusing to embed. Try a different proxy server, or hit retry.</p>
+            <div class="veil-actions">
+              <button class="btn" id="veilRetry">Retry</button>
+              <button class="btn primary" id="veilSwitch">Switch server</button>
+              <button class="btn" id="veilBack">Back</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Greeting -->
+      <div class="greeting" id="greeting">
+        <h1>Pick a game</h1>
+        <p class="greeting-sub">Browse the chip list above, search by name, or tap a card below. Every game routes through your selected <b>proxy server</b> so blocked networks can't stop you.</p>
+        <div class="greeting-grid" id="greetGrid"></div>
+        <p class="greet-hint">Tip: hit <b>Enter</b> in the search bar to jump to the first match. <b>ESC</b> clears the search.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════════
+     GAMES — portal page
+     Routes game URLs through the shared Ultraviolet proxy server
+     state from /proxy/index.html. iframe srcdoc-style encode:
+       <server.base><server.suffix>btoa(<targetUrl>)
+     ═══════════════════════════════════════════════════════════════ */
+
+  // ═══ Mirror BUILTIN_SERVERS from /proxy/index.html ════════════
+  const BUILTIN_SERVERS = [
+    { label: 'Nebula Proxy',     base: 'https://nebulaproxy.io',          suffix: '/service/', builtin: true },
+    { label: 'Holy Unblocker',    base: 'https://uv.holyubofficial.net',   suffix: '/service/', builtin: true },
+    { label: 'Interstellar',      base: 'https://interstellar.fyi',        suffix: '/service/', builtin: true },
+    { label: 'Incognito',         base: 'https://incognito.netlify.app',   suffix: '/service/', builtin: true },
+    { label: 'Metallic',          base: 'https://metallic.pages.dev',      suffix: '/service/', builtin: true },
+    { label: 'Rammerhead (rh.gg)',base: 'https://rh.gg',                   suffix: '/service/', builtin: true },
+    { label: 'Hypertabs',         base: 'https://hypertabs.cc',            suffix: '/service/', builtin: true },
+    { label: 'Shadow Proxy',      base: 'https://shadowproxy.cf',          suffix: '/service/', builtin: true },
+  ];
+
+  // ═══ Game library ═════════════════════════════════════════════
+  // ⚠️ CrazyGames etc. block direct iframe (X-Frame-Options), so
+  // every game is loaded via the active proxy. SM64 routes through
+  // ubg100's static HTML wrapper because it's the most proxy-
+  // friendly source we know of.
+  const GAMES = [
+    { id: 'basket-random',       name: 'Basket Random',         emoji: '🏀', category: 'sports',  url: 'https://www.crazygames.com/game/basket-random' },
+    { id: 'boxing-random',       name: 'Boxing Random',         emoji: '🥊', category: 'sports',  url: 'https://www.crazygames.com/game/boxing-random' },
+    { id: 'getaway-shootout',    name: 'Getaway Shootout',      emoji: '🏃', category: 'action',  url: 'https://www.crazygames.com/game/getaway-shootout' },
+    { id: 'house-of-hazards',    name: 'House of Hazards',      emoji: '🏠', category: 'party',   url: 'https://www.crazygames.com/game/house-of-hazards' },
+    { id: 'ovo',                 name: 'OvO',                   emoji: '🥚', category: 'platformer', url: 'https://www.crazygames.com/game/ovo' },
+    { id: 'rooftop-snipers-2',   name: 'Rooftop Snipers 2',     emoji: '🔭', category: 'action',  url: 'https://www.crazygames.com/game/rooftop-snipers-2' },
+    { id: 'slowroad',            name: 'Slowroad.io',           emoji: '🏔️', category: 'io',       url: 'https://slowroad.io' },
+    { id: 'sm64',                name: 'SM64 (browser port)',   emoji: '🍄', category: 'retro',   url: 'https://ubg100.github.io/games/sm64/' },
+    { id: 'soccer-random',       name: 'Soccer Random',         emoji: '⚽', category: 'sports',  url: 'https://www.crazygames.com/game/soccer-random' },
+    { id: 'super-liquid-soccer', name: 'Super Liquid Soccer',   emoji: '💧', category: 'sports',  url: 'https://www.crazygames.com/game/super-liquid-soccer' },
+    { id: 'vex',                 name: 'Vex',                   emoji: '🟦', category: 'platformer', url: 'https://www.crazygames.com/game/vex' },
+    { id: 'vex-2',               name: 'Vex 2',                 emoji: '🟪', category: 'platformer', url: 'https://www.crazygames.com/game/vex-2' },
+    { id: 'vex-3',               name: 'Vex 3',                 emoji: '🟥', category: 'platformer', url: 'https://www.crazygames.com/game/vex-3' },
+    { id: 'vex-4',               name: 'Vex 4',                 emoji: '🟨', category: 'platformer', url: 'https://www.crazygames.com/game/vex-4' },
+    { id: 'vex-5',               name: 'Vex 5',                 emoji: '🟩', category: 'platformer', url: 'https://www.crazygames.com/game/vex-5' },
+    { id: 'vex-6',               name: 'Vex 6',                 emoji: '🟫', category: 'platformer', url: 'https://www.crazygames.com/game/vex-6' },
+    { id: 'volleyball-random',   name: 'Volleyball Random',     emoji: '🏐', category: 'sports',  url: 'https://www.crazygames.com/game/volleyball-random' },
+  ];
+
+  // ═══ DOM refs ═════════════════════════════════════════════════
+  const $ = id => document.getElementById(id);
+  const stage       = $('stage');
+  const veil        = $('veil');
+  const veilLoading = $('veilLoading');
+  const veilError   = $('veilError');
+  const veilServer  = $('veilServer');
+  const veilErrMsg  = $('veilErrMsg');
+  const veilRetry   = $('veilRetry');
+  const veilSwitch  = $('veilSwitch');
+  const veilBack    = $('veilBack');
+  const chipnav     = $('chipnav');
+  const chipCount   = $('chipCount');
+  const greetGrid   = $('greetGrid');
+  const greeting    = $('greeting');
+  const search      = $('search');
+  const searchClear = $('searchClear');
+  const serverSel   = $('serverSelect');
+  const serverDot   = $('serverDot');
+  const fullscreenBtn = $('fullscreenBtn');
+  const homeBtn     = $('homeBtn');
+  const brandHome   = $('brandHome');
+  const activeName  = $('activeName');
+
+  // ═══ Server state (shared with /proxy/index.html) ════════════
+  // We store TWO keys: an index (legacy, matches proxy page) AND a
+  // server `base` URL (stable identity — survives future reorderings
+  // of BUILTIN_SERVERS across the two pages).
+  const STORAGE_CUSTOM     = 'proxy_custom_servers';
+  const STORAGE_ACTIVE     = 'proxy_active_server_idx';
+  const STORAGE_ACTIVE_BASE = 'proxy_active_server_base';
+
+  function loadCustom() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_CUSTOM) || '[]'); }
+    catch (e) { return []; }
+  }
+  function saveCustom(arr) {
+    try { localStorage.setItem(STORAGE_CUSTOM, JSON.stringify(arr)); }
+    catch (e) {}
+  }
+  function getActiveIdx() {
+    try {
+      // Prefer the base-URL identity — it's stable if BUILTIN_SERVERS
+      // is ever reordered to add a new built-in.
+      const base = localStorage.getItem(STORAGE_ACTIVE_BASE);
+      if (base) {
+        const idx = getAllServers().findIndex(s => s.base === base);
+        if (idx >= 0) return idx;
+      }
+      return parseInt(localStorage.getItem(STORAGE_ACTIVE) || '0', 10) || 0;
+    } catch (e) { return 0; }
+  }
+  function setActiveIdx(i) {
+    try {
+      localStorage.setItem(STORAGE_ACTIVE, String(i));
+      const srv = getAllServers()[clamp(i)];
+      if (srv) localStorage.setItem(STORAGE_ACTIVE_BASE, srv.base);
+    } catch (e) {}
+  }
+  function getAllServers() { return BUILTIN_SERVERS.concat(loadCustom()); }
+  function clamp(i) {
+    const a = getAllServers();
+    if (i < 0) return a.length - 1;
+    if (i >= a.length) return 0;
+    return i;
+  }
+  function getActive() {
+    return getAllServers()[clamp(getActiveIdx())];
+  }
+  function encodeURL(target) {
+    const srv = getActive();
+    try { return srv.base + srv.suffix + btoa(target); }
+    catch (e) { return srv.base + srv.suffix + encodeURIComponent(target); }
+  }
+
+  // ═══ Render: server dropdown ══════════════════════════════════
+  function renderServerSelect() {
+    const all = getAllServers();
+    serverSel.innerHTML = '';
+    all.forEach((srv, i) => {
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = (srv.builtin ? '⚡ ' : '🛰 ') + srv.label + (srv.builtin ? '' : ' (custom)');
+      if (i === getActiveIdx()) opt.selected = true;
+      serverSel.appendChild(opt);
+    });
+  }
+  serverSel.addEventListener('change', () => {
+    setActiveIdx(parseInt(serverSel.value, 10));
+    // If a game is already loaded, re-route it through the new server
+    if (currentGame) loadGame(currentGame.id);
+  });
+
+  // ═══ Render: chip nav (sorted A→Z) ════════════════════════════
+  const sortedGames = [...GAMES].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true })
+  );
+  function renderChips(filter = '') {
+    chipnav.innerHTML = '';
+    const q = filter.trim().toLowerCase();
+    const matches = sortedGames.filter(g => !q || g.name.toLowerCase().includes(q) || g.category.includes(q));
+    if (matches.length === 0) {
+      const msg = document.createElement('div');
+      msg.className = 'no-results';
+      msg.textContent = `No games match "${filter}"`;
+      chipnav.appendChild(msg);
+      chipCount.textContent = '0';
+      return matches;
+    }
+    matches.forEach(g => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.dataset.id = g.id;
+      chip.dataset.name = g.name;
+      if (currentGame && currentGame.id === g.id) chip.classList.add('active');
+      chip.innerHTML = `<span class="chip-emoji">${g.emoji}</span><span>${g.name}</span>`;
+      chip.addEventListener('click', () => loadGame(g.id));
+      chipnav.appendChild(chip);
+    });
+    chipCount.textContent = matches.length;
+    return matches;
+  }
+
+  // ═══ Greeting cards (curated subset sorted first) ═════════════
+  function renderGreetingGrid() {
+    greetGrid.innerHTML = '';
+    sortedGames.slice(0, 8).forEach(g => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'greet-card';
+      card.innerHTML = `
+        <div class="gc-icon">${g.emoji}</div>
+        <div class="gc-text">
+          <span class="gc-name">${g.name}</span>
+          <span class="gc-cat">${g.category}</span>
+        </div>`;
+      card.addEventListener('click', () => loadGame(g.id));
+      greetGrid.appendChild(card);
+    });
+  }
+
+  // ═══ Search ════════════════════════════════════════════════════
+  let lastMatches = [];
+  function onSearchInput() {
+    const q = search.value;
+    searchClear.classList.toggle('show', q.length > 0);
+    lastMatches = renderChips(q);
+  }
+  search.addEventListener('input', onSearchInput);
+  search.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Don't auto-launch a full library load just by pressing Enter on
+      // an empty/cleared search — that would surprise the user.
+      if (!search.value.trim()) return;
+      if (lastMatches && lastMatches.length > 0) {
+        loadGame(lastMatches[0].id);
+      }
+    } else if (e.key === 'Escape') {
+      search.value = '';
+      searchClear.classList.remove('show');
+      renderChips();
+    }
+  });
+  searchClear.addEventListener('click', () => {
+    search.value = '';
+    searchClear.classList.remove('show');
+    renderChips();
+    search.focus();
+  });
+
+  // ═══ Load game ════════════════════════════════════════════════
+  let currentGame = null;
+  let loadAttempt = 0;
+  let loadTimer = null;
+
+  function loadGame(id) {
+    const g = GAMES.find(x => x.id === id);
+    if (!g) return;
+
+    // First tear down any previous iframe contents to stop its audio/etc
+    try { stage.contentWindow && (stage.contentWindow.location.href = 'about:blank'); } catch(e) {}
+
+    currentGame = g;
+
+    // Hide greeting, show veil
+    greeting.style.display = 'none';
+    veil.style.display = 'flex';
+    veilLoading.style.display = '';
+    veilError.style.display = 'none';
+    veilServer.textContent = getActive().label;
+
+    // Compute proxy URL and set iframe src
+    const proxied = encodeURL(g.url);
+    stage.classList.add('active');
+    stage.src = 'about:blank'; // clear before setting real URL (avoid audio bleed)
+    setTimeout(() => { stage.src = proxied; }, 60);
+
+    // Top-bar / chip active state
+    document.querySelectorAll('.chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.id === g.id);
+    });
+    fullscreenBtn.disabled = false;
+    activeName.textContent = 'Now playing: ' + g.name;
+
+    // Window title
+    document.title = g.name + ' · Games';
+
+    // Auto-scroll the active chip into view
+    setTimeout(() => {
+      const active = document.querySelector('.chip.active');
+      if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }, 80);
+
+    // Fail-safe: if iframe doesn't fire onload within 28s, show the error UI
+    clearTimeout(loadTimer);
+    loadAttempt = 0;
+    loadTimer = setTimeout(() => {
+      if (veil.style.display === 'flex' && veilLoading.style.display !== 'none') {
+        showStageError('The active proxy didn\'t return the page in time.');
+      }
+    }, 28000);
+  }
+
+  function showStageError(msg) {
+    veilLoading.style.display = 'none';
+    veilError.style.display = '';
+    veilErrMsg.textContent = msg;
+  }
+  veilRetry.addEventListener('click', () => {
+    if (currentGame) loadGame(currentGame.id);
+  });
+  veilSwitch.addEventListener('click', () => {
+    serverSel.focus();
+    const all = getAllServers();
+    const next = (getActiveIdx() + 1) % all.length;
+    serverSel.value = String(next);
+    setActiveIdx(next);
+    if (currentGame) loadGame(currentGame.id);
+  });
+  veilBack.addEventListener('click', () => goHome());
+
+  stage.addEventListener('load', () => {
+    clearTimeout(loadTimer);
+    loadAttempt++;
+    // Hide veil once content is in
+    setTimeout(() => {
+      veil.style.display = 'none';
+    }, 220);
+  });
+
+  // ═══ Home ══════════════════════════════════════════════════════
+  function goHome() {
+    currentGame = null;
+    try { stage.contentWindow && (stage.contentWindow.location.href = 'about:blank'); } catch(e) {}
+    stage.classList.remove('active');
+    stage.removeAttribute('src');
+    veil.style.display = 'none';
+    greeting.style.display = '';
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    fullscreenBtn.disabled = true;
+    activeName.textContent = 'No game loaded';
+    document.title = 'Games';
+    search.value = '';
+    searchClear.classList.remove('show');
+    renderChips();
+  }
+  homeBtn.addEventListener('click', goHome);
+  brandHome.addEventListener('click', goHome);
+
+  // ═══ Open current game directly in a new tab (raw URL) ════════
+  fullscreenBtn.addEventListener('click', () => {
+    if (currentGame) window.open(currentGame.url, '_blank', 'noopener,noreferrer');
+  });
+
+  // ═══ Init ═════════════════════════════════════════════════════
+  renderServerSelect();
+  renderChips();
+  renderGreetingGrid();
+  </script>
+</body>
+</html>

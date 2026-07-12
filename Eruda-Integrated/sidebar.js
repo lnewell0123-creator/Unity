@@ -76,6 +76,11 @@
     border:1px solid #D97757; color:#E89170;
     text-shadow:0 0 6px rgba(232,145,112,0.4); letter-spacing:1px;
   }
+  .esb-btn.games {
+    background:linear-gradient(135deg,#1a0b2e,#2a1145);
+    border:1px solid #a855f7; color:#c084fc;
+    text-shadow:0 0 6px rgba(168,85,247,0.4); letter-spacing:1px;
+  }
   .esb-btn.home { background:#2c3e50; border:1px solid #7f8c8d; color:#bdc3c7; }
   #esb-tab-select {
     width:100%; padding:8px 10px; border-radius:6px; border:none;
@@ -100,6 +105,7 @@
       <a  class="esb-btn godmode"    href="${root}godmode/index.html">⛓️‍💥 G0DM0D3 AI</a>
       <a  class="esb-btn proxy"      href="${root}proxy/index.html">🌀 Web Proxy</a>
       <a  class="esb-btn claude"     href="${root}claude-cli/index.html">🧠 Claude CLI</a>
+      <a  class="esb-btn games"      href="${root}games/index.html">🕹️ Games</a>
 
       <h3>🔔 Notifications</h3>
       <button class="esb-btn blue" id="esb-notify-btn">Send Notifications</button>
